@@ -51,7 +51,7 @@ fetch(APIUrl)
         humidity.innerHTML = `${data.humidity}%`;
         wind.innerHTML = `${data.metric.windSpeed} km/h`;
         solarRadiation.innerHTML = `${data.solarRadiation} kWh`;
-        UV.innerHTML = `${data.UV} kWh`;
+        UV.innerHTML = `${data.uv} kWh`;
         winddir.innerHTML = `${data.winddir}<span>°</span>`;
         windChill.innerHTML = `${data.metric.windChill} Twc`;
 
