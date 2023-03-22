@@ -38,7 +38,7 @@ fetch(APIUrl)
                 break;
 
             case data.metric.temp > 25:
-                image.src = 'images/404.png';
+                image.src = 'images/clear.png';
                 break;
 
             default:
