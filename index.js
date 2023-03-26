@@ -1,6 +1,5 @@
 const APIKey = '367af7dad35a4d88baf7dad35a8d88dc';
 const APIUrl = `https://api.weather.com/v2/pws/observations/current?stationId=ISHENZ61&format=json&units=m&apiKey=${APIKey}`;
-
 const container = document.querySelector('.container');
 const search = document.querySelector('.search-box button');
 const weatherBox = document.querySelector('.weather-box');
@@ -8,13 +7,11 @@ const weatherDetails = document.querySelector('.weather-details');
 const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
-
 fetch(APIUrl)
     .then(response => response.json())
     .then(json => {
         const data = json.observations[0];
         console.log(data);
-
         const image = document.querySelector('.weather-box img');
         const temperature = document.querySelector('.weather-box .temperature');
         const description = document.querySelector('.weather-box .description');
@@ -28,27 +25,22 @@ fetch(APIUrl)
             case data.metric.temp <= 5:
                 image.src = 'images/snow.png';
                 break;
-
             case data.metric.temp > 5 && data.metric.temp <= 15:
                 image.src = 'images/cloud.png';
                 break;
-
             case data.metric.temp > 15 && data.metric.temp <= 25:
                 image.src = 'images/clear.png';
                 break;
 
             case data.metric.temp > 25:
-                
-                break;
-            case data.solarRadiation = 0
-                image.src = 'images/moon.png';
+                image.src = 'images/clear.png';
+                image.src = 'images/hot.png';
                 break;
 
             default:
                 image.src = 'images/mist.png';
                 break;
         }
-
         temperature.innerHTML = `${data.metric.temp}<span>°C</span>`;
         description.innerHTML = `Weather: ${data.metric.temp}`;
         humidity.innerHTML = `${data.humidity}%`;
@@ -57,14 +49,12 @@ fetch(APIUrl)
         UV.innerHTML = `${data.uv} mW`;
         winddir.innerHTML = `${data.winddir}<span>°</span>`;
         windChill.innerHTML = `${data.metric.windChill} Twc`;
-
         // Show weather data
         weatherBox.style.display = '';
         weatherDetails.style.display = '';
         weatherBox.classList.add('fadeIn');
         weatherDetails.classList.add('fadeIn');
         container.style.height = '590px';
-
     })
     .catch(error => {
         console.log(error);
