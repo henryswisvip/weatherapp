@@ -8,7 +8,8 @@ const weatherDetails = document.querySelector('.weather-details');
 const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
-
+const now = new Date();
+const currentHour = now.getHours();
 fetch(APIUrl)
     .then(response => response.json())
     .then(json => {
@@ -24,6 +25,7 @@ fetch(APIUrl)
         const UV = document.querySelector('.radiation .UV span');
         const winddir = document.querySelector('.windd .winddir span');
         const windChill = document.querySelector('.windd .windChill span');
+        const moonImage = document.createElement('img');
         switch (true) {
             case data.metric.temp <= 5:
                 image.src = 'images/snow.png';
@@ -38,7 +40,10 @@ fetch(APIUrl)
                 break;
 
             case data.metric.temp > 25:
-                image.src = 'images/hot.png';
+                
+                break;
+            case (currentHour >= 18):
+                image.src = 'images/moon.png';
                 break;
 
             default:
