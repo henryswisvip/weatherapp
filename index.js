@@ -8,8 +8,7 @@ const weatherDetails = document.querySelector('.weather-details');
 const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
-const now = new Date(Date.now() + 8 * 60 * 60 * 1000);
-const currentHour = now.getHours();
+
 fetch(APIUrl)
     .then(response => response.json())
     .then(json => {
@@ -41,7 +40,7 @@ fetch(APIUrl)
             case data.metric.temp > 25:
                 
                 break;
-            case (currentHour >= 18):
+            case data.radation.solarRadiation = 0
                 image.src = 'images/moon.png';
                 break;
 
