@@ -40,7 +40,7 @@ fetch(APIUrl)
             case data.metric.temp > 25:
                 
                 break;
-            case data.radation.solarRadiation = 0
+            case data.metric.solarRadiation = 0
                 image.src = 'images/moon.png';
                 break;
 
