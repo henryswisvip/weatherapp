@@ -38,9 +38,10 @@ fetch(APIUrl)
             case data.metric.temp > 25:
                 image.src = 'images/hot.png';
                 break;
-            case data.metric.precipRate > 10:
-                image.src = 'images/raining.png;
+            case data.metric.precipRate > 25:
+                image.src = 'images/raining.png';
                 break;
+                
             default:
                 image.src = 'images/mist.png';
                 break;
