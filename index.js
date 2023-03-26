@@ -22,6 +22,10 @@ fetch(APIUrl)
         const winddir = document.querySelector('.windd .winddir span');
         const windChill = document.querySelector('.windd .windChill span');
         switch (true) {
+                
+            case data.solarRadiation = 0:
+                image.src = 'images/moon.png';
+                break;
             case data.metric.temp <= 5:
                 image.src = 'images/snow.png';
                 break;
@@ -32,9 +36,7 @@ fetch(APIUrl)
                 image.src = 'images/clear.png';
                 break;
                 
-            case data.solarRadiation = 0:
-                image.src = 'images/moon.png';
-                break;
+            
 
             case data.metric.temp > 25:
                 image.src = 'images/hot.png';
