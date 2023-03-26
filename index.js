@@ -23,7 +23,7 @@ fetch(APIUrl)
         const windChill = document.querySelector('.windd .windChill span');
         switch (true) {
                 
-            case data.solarRadiation = 0:
+            case data.solarRadiation == 0:
                 image.src = 'images/moon.png';
                 break;
             case data.metric.temp <= 5:
