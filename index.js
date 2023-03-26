@@ -33,8 +33,10 @@ fetch(APIUrl)
                 break;
 
             case data.metric.temp > 25:
-                image.src = 'images/clear.png';
                 image.src = 'images/hot.png';
+                break;
+            case data.solarRadiation = 0:
+                image.src = 'images/moon.png';
                 break;
 
             default:
