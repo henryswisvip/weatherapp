@@ -40,6 +40,7 @@ fetch(APIUrl)
                 break;
             case data.metric.precipRate > 10:
                 image.src = 'image/raining.png
+                break;
             default:
                 image.src = 'images/mist.png';
                 break;
