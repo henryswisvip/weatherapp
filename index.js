@@ -26,8 +26,14 @@ fetch(APIUrl)
             case data.solarRadiation == 0:
                 image.src = 'images/moon.png';
                 break;
-            case data.solarRadiation < 50 && data.metric.precipRate < 10:
+            case data.solarRadiation > 50 && data.metric.precipRate < 10:
+                image.src = 'images/showers.png';
+                break;
+            case data.solarRadiation < 50 && data.metric.precipRate > 10 && data.metric.precipRate < 100:
                 image.src = 'images/rain.png';
+                break;
+            case data.solarRadiation < 50 && data.metric.precipRate < 10:
+                image.src = 'images/drizzle.png';
                 break;
             case data.metric.temp <= 5:
                 image.src = 'images/snow.png';
