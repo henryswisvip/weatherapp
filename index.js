@@ -35,6 +35,15 @@ fetch(APIUrl)
             case data.solarRadiation < 50 && data.metric.precipRate < 10:
                 image.src = 'images/drizzle.png';
                 break;
+            case data.solarRadiation < 50:
+                image.src = 'images/cloudy.png';
+                break;
+            case data.solarRadiation < 50:
+                image.src = 'images/partly cloudy.png';
+                break;
+            case data.solarRadiation < 50:
+                image.src = 'images/sunny.png';
+                break;
             case data.metric.temp <= 5:
                 image.src = 'images/snow.png';
                 break;
