@@ -42,7 +42,7 @@ fetch(APIUrl)
                 image.src = 'images/partly cloudy.png';
                 break;
             case data.solarRadiation > 100:
-                image.src = 'images/sunny.png';
+                image.src = 'images/clear.png';
                 break;
             case data.metric.temp <= 5:
                 image.src = 'images/snow.png';
