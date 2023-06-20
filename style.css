@@ -6,6 +6,23 @@
     box-sizing: border-box;
 }
 
+
+
+#myChart {
+    position: absolute !important;
+    width: 380px !important;
+    height: 250px !important;
+    margin-top: 200px !important;
+    margin-left: 373px!important;
+    margin-right: -129px!important;
+    margin-bottom: -129px!important;
+}
+
+
+.container .radiation .SolarRadiation {
+}
+
+
 body{
     height: 100vh;
     display: flex;
@@ -71,6 +88,8 @@ body{
     font-size: 22px;
     transition: 0.4s ease;
 }
+
+.search-box 
 
 .search-box button:hover{
     color: #fff;

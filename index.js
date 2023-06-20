@@ -79,3 +79,44 @@ fetch(APIUrl)
     .catch(error => {
         console.log(error);
     });
+
+
+
+
+
+    fetch('https://api.weather.com/v2/pws/dailysummary/7day?stationId=ISHENZ61&format=json&units=m&apiKey=367af7dad35a4d88baf7dad35a8d88dc')
+    .then(response => response.json())
+    .then(data => {
+        const highs = data.summaries.map(summary => summary.metric.tempHigh);
+        const lows = data.summaries.map(summary => summary.metric.tempLow);
+
+    
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday'],
+                datasets: [
+                    {
+                        label: 'High Temperatures',
+                        data:highs,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        fill: false
+                    },
+                    {
+                        label: 'Low Temperatures',
+                        data:lows,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
