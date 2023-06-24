@@ -79,6 +79,7 @@ fetch(APIUrl)
     .catch(error => {
         console.log(error);
     });
+    setInterval(fetchWeatherData, 10000);
 
 
 
@@ -120,3 +121,4 @@ fetch(APIUrl)
             }
         });
     });
+setInterval(fetchWeatherData, 10000);
