@@ -72,7 +72,7 @@ function fetchCurrentWeatherData() {
             solarRadiation.innerHTML = `${data.solarRadiation} kWh`;
             UV.innerHTML = `${data.uv} mW`;
             winddir.innerHTML = `${data.winddir}<span>°</span>`;
-            windChill.innerHTML = `${data.metric.windChill} Twc`;
+            windChill.innerHTML = `${data.metric.precipRate} mm/hr`;
             
             // Show weather data
             weatherBox.style.display = '';
