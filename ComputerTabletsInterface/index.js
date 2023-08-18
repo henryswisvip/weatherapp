@@ -27,6 +27,8 @@ function fetchCurrentWeatherData() {
                 case data.solarRadiation == 0:
                     image.src = 'images/moon.png';
                     break;
+                case data.solarRadiation < 50 && data.metric.precipRate < 10 && data.metric.precipRate > 0:
+                    image.src = 'images/drizzle.png';
 
                 case data.solarRadiation < 50 && data.metric.precipRate > 50 && data.metric.precipRate < 100:
                     image.src = 'images/heavy rain.png';
