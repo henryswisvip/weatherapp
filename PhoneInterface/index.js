@@ -23,14 +23,15 @@ fetch(APIUrl)
             const winddir = document.querySelector('.windd .winddir span');
             const windChill = document.querySelector('.windd .windChill span');
             switch (true) {
-                case data.solarRadiation == 0:
-                    image.src = 'images/moon.png';
-                    break;
-                case data.solarRadiation > 50 && data.metric.precipRate < 10 && data.metric.precipRate > 0:
+                case data.solarRadiation < 50 && data.metric.precipRate < 20 && data.metric.precipRate > 0:
                     image.src = 'images/drizzle.png';
-                    break;
+
                 case data.solarRadiation < 50 && data.metric.precipRate > 50 && data.metric.precipRate < 100:
-                    image.src = 'images/heavy rain .png';
+                    image.src = 'images/heavy rain.png';
+                    break;
+                    
+                case data.solarRadiation < 50 && data.metric.precipRate > 20 && data.metric.precipRate < 50:
+                    image.src = 'images/rain.png';
                     break;
                 case data.solarRadiation < 50 && data.metric.precipRate < 10 && data.metric.precipRate > 0:
                     image.src = 'images/drizzle.png';
@@ -55,6 +56,9 @@ fetch(APIUrl)
                     break;
                 case data.metric.temp > 25:
                     image.src = 'images/hot.png';
+                    break;
+                case data.solarRadiation == 0:
+                    image.src = 'images/moon.png';
                     break;
 
                 default:
