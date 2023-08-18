@@ -29,7 +29,7 @@ function fetchCurrentWeatherData() {
                     image.src = 'images/drizzle.png';
 
                 case data.solarRadiation < 50 && data.metric.precipRate > 50 && data.metric.precipRate < 100:
-                    image.src = 'images/';
+                    image.src = 'images/heavy rain .png';
                     break;
                     
                 case data.solarRadiation < 50 && data.metric.precipRate > 20 && data.metric.precipRate < 50:
