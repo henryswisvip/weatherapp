@@ -24,9 +24,7 @@ function fetchCurrentWeatherData() {
             const winddir = document.querySelector('.windd .winddir span');
             const windChill = document.querySelector('.windd .windChill span');
             switch (true) {
-                case data.solarRadiation == 0:
-                    image.src = 'images/moon.png';
-                    break;
+
                 case data.solarRadiation < 50 && data.metric.precipRate < 10 && data.metric.precipRate > 0:
                     image.src = 'images/drizzle.png';
 
@@ -60,6 +58,9 @@ function fetchCurrentWeatherData() {
                     break;
                 case data.metric.temp > 25:
                     image.src = 'images/hot.png';
+                    break;
+                case data.solarRadiation == 0:
+                    image.src = 'images/moon.png';
                     break;
 
                 default:
