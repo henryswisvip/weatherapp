@@ -1,4 +1,4 @@
-const APIKey = '367af7dad35a4d88baf7dad35a8d88dc';
+const APIKey = '2fc44795e5144333844795e514d3338f';
 const APIUrl = `https://api.weather.com/v2/pws/observations/current?stationId=ISHENZ61&format=json&units=m&apiKey=${APIKey}`;
 
 const container = document.querySelector('.container');
