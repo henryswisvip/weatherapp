@@ -63,7 +63,7 @@ function fetchCurrentWeatherData() {
                     break;
             }
 
-            // Your remaining code for setting weather details...
+        
             
             temperature.innerHTML = `${data.metric.temp}<span>°C</span>`;
             description.innerHTML = `Weather: ${data.metric.temp}`;
