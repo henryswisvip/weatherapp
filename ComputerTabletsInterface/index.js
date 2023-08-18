@@ -95,7 +95,7 @@ fetchCurrentWeatherData();
 setInterval(fetchCurrentWeatherData, 10000);
 
 function fetchHistoricalWeatherData() {
-    fetch('https://api.weather.com/v2/pws/dailysummary/7day?stationId=ISHENZ61&format=json&units=m&apiKey=367af7dad35a4d88baf7dad35a8d88dc')
+    fetch('https://api.weather.com/v2/pws/dailysummary/7day?stationId=ISHENZ61&format=json&units=m&apiKey=2fc44795e5144333844795e514d3338f')
         .then(response => response.json())
         .then(data => {
             const highs = data.summaries.map(summary => summary.metric.tempHigh);
