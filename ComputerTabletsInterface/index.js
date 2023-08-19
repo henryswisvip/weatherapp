@@ -43,15 +43,15 @@ function fetchCurrentWeatherData() {
                 case data.metric.temp > 5 && data.metric.temp <= 15:
                     image.src = 'images/cloud.png';
                     break;
-                case data.solarRadiation > 100:
-                    image.src = 'images/clear.png';
-                    break;
                 case data.metric.temp > 25 && data.solarRadiation != 0:
                     image.src = 'images/hot.png';
                     break;
                 case data.solarRadiation == 0:
                         image.src = 'images/moon.png';
                         break;
+                case data.solarRadiation > 100:
+                    image.src = 'images/clear.png';
+                    break;
 
 
 
