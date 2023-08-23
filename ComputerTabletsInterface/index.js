@@ -102,6 +102,7 @@ function fetchHistoricalWeatherData() {
         .then(data => {
             const highs = data.summaries.map(summary => summary.metric.tempHigh);
             const lows = data.summaries.map(summary => summary.metric.tempLow);
+            const precipTotals = data.summaries.map(summary => summary.metric.precipTotal); // Added this line
 
             const ctx = document.getElementById('myChart').getContext('2d');
             const chart = new Chart(ctx, {
@@ -111,14 +112,20 @@ function fetchHistoricalWeatherData() {
                     datasets: [
                         {
                             label: 'High Temperatures',
-                            data:highs,
+                            data: highs,
                             borderColor: 'rgba(255, 99, 132, 1)',
                             fill: false
                         },
                         {
                             label: 'Low Temperatures',
-                            data:lows,
+                            data: lows,
                             borderColor: 'rgba(54, 162, 235, 1)',
+                            fill: false
+                        },
+                        {
+                            label: 'Total Precipitation', // Added this dataset
+                            data: precipTotals,
+                            borderColor: 'rgba(75, 192, 192, 1)',
                             fill: false
                         }
                     ]
