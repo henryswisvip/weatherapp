@@ -43,7 +43,7 @@ function fetchCurrentWeatherData() {
                 case data.metric.temp > 5 && data.metric.temp <= 15:
                     image.src = 'images/cloud.png';
                     break;
-                case data.metric.temp > 35 && data.solarRadiation > 10 && data.metric.temp = 35:
+                case data.metric.temp > 35 && data.solarRadiation > 10 || data.metric.temp = 35:
                     image.src = 'images/hot.png';
                     break;
                 case data.solarRadiation == 0:
