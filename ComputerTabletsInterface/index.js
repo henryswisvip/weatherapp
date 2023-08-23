@@ -129,26 +129,35 @@ function fetchHistoricalWeatherData() {
             const lows = data.summaries.map(summary => summary.metric.tempLow);
             const precipTotals = data.summaries.map(summary => summary.metric.precipTotal); // Added this line
 
+            // Determine the language based on the URL path
+            const isChinese = window.location.pathname.includes("/index_cn");
+
+            // Labels for English or Chinese versions
+            const labels = isChinese ? ['7天前', '6天前', '5天前', '4天前', '3天前', '2天前', '昨天'] : ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday'];
+            const highLabel = isChinese ? '最高温度' : 'High Temperatures';
+            const lowLabel = isChinese ? '最低温度' : 'Low Temperatures';
+            const precipLabel = isChinese ? '总降水量' : 'Total Precipitation';
+
             const ctx = document.getElementById('myChart').getContext('2d');
             const chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday'],
+                    labels: labels, // Using dynamic labels
                     datasets: [
                         {
-                            label: 'High Temperatures',
+                            label: highLabel, // Using dynamic label
                             data: highs,
                             borderColor: 'rgba(255, 99, 132, 1)',
                             fill: false
                         },
                         {
-                            label: 'Low Temperatures',
+                            label: lowLabel, // Using dynamic label
                             data: lows,
                             borderColor: 'rgba(54, 162, 235, 1)',
                             fill: false
                         },
                         {
-                            label: 'Total Precipitation', // Added this dataset
+                            label: precipLabel, // Using dynamic label
                             data: precipTotals,
                             borderColor: 'rgba(75, 192, 192, 1)',
                             fill: false
@@ -165,6 +174,7 @@ function fetchHistoricalWeatherData() {
             });
         });
 }
+
 
 fetchHistoricalWeatherData();
 setInterval(fetchHistoricalWeatherData, 40000);
