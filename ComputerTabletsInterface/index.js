@@ -8,16 +8,18 @@ const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
 
-function degreesToCompass(degrees, language) {
+function degreesToCompass(degrees) {
     const directionsEnglish = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
     const directionsChinese = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
 
-    const directions = language === 'zh' ? directionsChinese : directionsEnglish;
+    // Check if the URL contains "/index_cn", and select the appropriate direction array
+    const directions = window.location.pathname.includes("/index_cn") ? directionsChinese : directionsEnglish;
 
     const index = Math.round(((degrees % 360) / 45));
     const direction = directions[index] || directions[0];
 
-    if (language === 'zh') return directionsChinese;
+    // If Chinese, return the character; otherwise, expand single directions or return the combined one
+    if (window.location.pathname.includes("/index_cn")) return direction;
 
     switch (direction) {
         case "N": return "North";
