@@ -8,10 +8,16 @@ const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
 
-function degreesToCompass(degrees) {
-    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+function degreesToCompass(degrees, language) {
+    const directionsEnglish = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    const directionsChinese = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
+
+    const directions = language === 'zh' ? directionsChinese : directionsEnglish;
+
     const index = Math.round(((degrees % 360) / 45));
     const direction = directions[index] || directions[0];
+
+    if (language === 'zh') return direction;
 
     switch (direction) {
         case "N": return "North";
@@ -21,6 +27,9 @@ function degreesToCompass(degrees) {
         default: return direction;
     }
 }
+
+// Determine the language:
+const language = document.documentElement.lang;
 
 function fetchCurrentWeatherData() {
     fetch(APIUrl)
