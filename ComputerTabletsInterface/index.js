@@ -17,7 +17,7 @@ function degreesToCompass(degrees, language) {
     const index = Math.round(((degrees % 360) / 45));
     const direction = directions[index] || directions[0];
 
-    if (language === 'zh') return direction;
+    if (language === 'zh') return directionsChinese;
 
     switch (direction) {
         case "N": return "North";
