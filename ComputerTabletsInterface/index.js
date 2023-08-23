@@ -8,6 +8,14 @@ const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
 
+
+function degreesToCompass(degrees) {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N'];
+    const index = Math.round((degrees % 360) / 45);
+    return directions[index];
+}
+
+
 function fetchCurrentWeatherData() {
     fetch(APIUrl)
         .then(response => response.json())
@@ -77,7 +85,7 @@ function fetchCurrentWeatherData() {
             wind.innerHTML = `${data.metric.windSpeed} km/h`;
             solarRadiation.innerHTML = `${data.solarRadiation} kWh`;
             UV.innerHTML = `${data.uv} mW`;
-            winddir.innerHTML = `${data.winddir}<span>°</span>`;
+           winddir.innerHTML = `${degreesToCompass(data.winddir)}`;
             windChill.innerHTML = `${data.metric.precipRate.toFixed(1)} mm/hr`;
 
             
