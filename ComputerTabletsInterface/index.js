@@ -8,13 +8,19 @@ const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
 
-
 function degreesToCompass(degrees) {
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N'];
-    const index = Math.round((degrees % 360) / 45);
-    return directions[index];
-}
+    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    const index = Math.round(((degrees % 360) / 45));
+    const direction = directions[index] || directions[0];
 
+    switch (direction) {
+        case "N": return "North";
+        case "E": return "East";
+        case "S": return "South";
+        case "W": return "West";
+        default: return direction;
+    }
+}
 
 function fetchCurrentWeatherData() {
     fetch(APIUrl)
