@@ -1,4 +1,4 @@
-const APIKey = '2fc44795e5144333844795e514d3338f';
+const APIKey = '547d3f02-e7c4-46d1-bef9-072d402873d8';
 const APIUrl = `https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=${APIKey}=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_uni tid=3&wind_speed_unitid=6&rainfall_unitid=12`;
 const container = document.querySelector('.container');
 const search = document.querySelector('.search-box button');
@@ -127,5 +127,68 @@ function fetchCurrentWeatherData() {
         });
 }
 //
+fetchCurrentWeatherData();
+setInterval(fetchCurrentWeatherData, 25000);
 
+function fetchHistoricalWeatherData() {
+    fetch('https://api.weather.com/v2/pws/dailysummary/7day?stationId=ISHENZ61&format=json&units=m&apiKey=2fc44795e5144333844795e514d3338f')
+        .then(response => response.json())
+        .then(data => {
+            const highs = data.summaries.map(summary => summary.metric.tempHigh);
+            const lows = data.summaries.map(summary => summary.metric.tempLow);
+            const precipTotals = data.summaries.map(summary => summary.metric.precipTotal); // Added this line
+
+            // Determine the language based on the URL path
+            const isChinese = window.location.pathname.includes("/index_cn");
+
+            // Labels for English or Chinese versions
+            const labels = isChinese ? ['7天前', '6天前', '5天前', '4天前', '3天前', '2天前', '昨天/今天'] : ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday'];
+            const highLabel = isChinese ? '最高温度' : 'High Temperatures';
+            const lowLabel = isChinese ? '最低温度' : 'Low Temperatures';
+            const precipLabel = isChinese ? '总降水量' : 'Total Precipitation';
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels, // Using dynamic labels
+                    datasets: [
+                        {
+                            label: highLabel, // Using dynamic label
+                            data: highs,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            fill: false
+                        },
+                        {
+                            label: lowLabel, // Using dynamic label
+                            data: lows,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            fill: false
+                        },
+                        {
+                            label: precipLabel, // Using dynamic label
+                            data: precipTotals,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+}
+
+
+fetchHistoricalWeatherData();
+setInterval(fetchHistoricalWeatherData, 12 * 60 * 60 * 1000);
+
+languageButton.addEventListener('click', () => {
+    // Code to change the language of the page goes here
+});
 //
