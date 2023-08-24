@@ -137,7 +137,7 @@ function fetchHistoricalWeatherData() {
             const isChinese = window.location.pathname.includes("/index_cn");
 
             // Labels for English or Chinese versions
-            const labels = isChinese ? ['7天前', '6天前', '5天前', '4天前', '3天前', '2天前', '昨天/今天'] : ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday/today'];
+            const labels = isChinese ? ['7天前', '6天前', '5天前', '4天前', '3天前', '2天前', '昨天/今天'] : ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday/Today'];
             const highLabel = isChinese ? '最高温度' : 'High Temperatures';
             const lowLabel = isChinese ? '最低温度' : 'Low Temperatures';
             const precipLabel = isChinese ? '总降水量' : 'Total Precipitation';
