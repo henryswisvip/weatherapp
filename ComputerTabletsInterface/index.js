@@ -130,7 +130,4 @@ function fetchCurrentWeatherData() {
 fetchCurrentWeatherData();
 setInterval(fetchCurrentWeatherData, 25000);
 
-languageButton.addEventListener('click', () => {
-    // Code to change the language of the page goes here
-});
-//
+
