@@ -51,6 +51,8 @@ function fetchCurrentWeatherData() {
             const solarRadiation = document.querySelector('.radiation .SolarRadiation span');
             const UV = document.querySelector('.radiation .UV span');
             const winddir = document.querySelector('.windd .winddir span');
+            const windChill = document.querySelector('.windd .windChill span');
+             switch (true) {
 
                 case data.metric.precipRate > 50:
                     image.src = 'images/heavy rain .png';
