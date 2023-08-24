@@ -119,7 +119,7 @@ function fetchCurrentWeatherData() {
 }
 
 fetchCurrentWeatherData();
-setInterval(fetchCurrentWeatherData, 10000);
+setInterval(fetchCurrentWeatherData, 25000);
 
 function fetchHistoricalWeatherData() {
     fetch('https://api.weather.com/v2/pws/dailysummary/7day?stationId=ISHENZ61&format=json&units=m&apiKey=2fc44795e5144333844795e514d3338f')
@@ -177,7 +177,7 @@ function fetchHistoricalWeatherData() {
 
 
 fetchHistoricalWeatherData();
-setInterval(fetchHistoricalWeatherData, 40000);
+setInterval(fetchHistoricalWeatherData, 12 * 60 * 60 * 1000);
 
 languageButton.addEventListener('click', () => {
     // Code to change the language of the page goes here
