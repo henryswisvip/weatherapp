@@ -51,7 +51,7 @@ function fetchCurrentWeatherData() {
             const UV = document.querySelector('.radiation .UV span');
             const winddir = document.querySelector('.windd .winddir span');
             const windChill = document.querySelector('.windd .windChill span');
-             switch (true) {
+
 
                switch (true) {
     case data.rainfall.rain_rate.value > 50:
