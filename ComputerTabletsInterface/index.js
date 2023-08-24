@@ -34,12 +34,16 @@ function degreesToCompass(degrees) {
 const language = document.documentElement.lang;
 
 function fetchCurrentWeatherData() {
-    fetch(APIUrl)
+    fetch(APIUrl) // Make sure to update this with your new API endpoint
         .then(response => response.json())
         .then(json => {
-            const data = json.observations[0];
-            console.log(data);
-            const image = document.querySelector('.weather-box img');
+            if (json.code !== 0) {
+                console.error('Failed to fetch data:', json.msg);
+                return;
+            }
+
+            const data = json.data;
+
             const temperature = document.querySelector('.weather-box .temperature');
             const description = document.querySelector('.weather-box .description');
             const humidity = document.querySelector('.weather-details .humidity span');
@@ -47,8 +51,6 @@ function fetchCurrentWeatherData() {
             const solarRadiation = document.querySelector('.radiation .SolarRadiation span');
             const UV = document.querySelector('.radiation .UV span');
             const winddir = document.querySelector('.windd .winddir span');
-            const windChill = document.querySelector('.windd .windChill span');
-            switch (true) {
 
                 case data.metric.precipRate > 50:
                     image.src = 'images/heavy rain .png';
