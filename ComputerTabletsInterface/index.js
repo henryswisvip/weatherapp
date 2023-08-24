@@ -50,7 +50,7 @@ function fetchCurrentWeatherData() {
             const windChill = document.querySelector('.windd .windChill span');
             switch (true) {
 
-                case data.solarRadiation < 50 && data.metric.precipRate > 50 && data.metric.precipRate < 100:
+                case data.metric.precipRate > 50 && data.metric.precipRate < 100:
                     image.src = 'images/heavy rain.png';
                     break;
                 case data.solarRadiation < 50 && data.metric.precipRate > 10 && data.metric.precipRate < 50:
