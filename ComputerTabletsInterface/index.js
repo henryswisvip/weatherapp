@@ -59,7 +59,7 @@ function fetchCurrentWeatherData() {
                 case data.solarRadiation > 50 && data.metric.precipRate < 10 && data.metric.precipRate > 0:
                     image.src = 'images/drizzle.png';
                     break;
-                case data.solarRadiation < 50 && data.metric.precipRate == 0 && data.solarRadiation != 0 && data.metric.temp < 25 :
+                case data.solarRadiation < 50 && data.metric.precipRate == 0 && data.solarRadiation != 0 && data.metric.temp < 34 :
                     image.src = 'images/cloudy.png';
                     break;
                 case data.solarRadiation > 50 && data.solarRadiation < 100:
