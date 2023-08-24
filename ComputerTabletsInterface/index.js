@@ -101,7 +101,7 @@ function fetchCurrentWeatherData() {
         
             
             temperature.innerHTML = `${data.metric.temp}<span>°C</span>`;
-            description.innerHTML = `Weather: ${data.metric.temp}`;
+            description.innerHTML = `Feels Like: ${data.metric.heatIndex}`;
             humidity.innerHTML = `${data.humidity}%`;
             wind.innerHTML = `${data.metric.windSpeed} km/h`;
             solarRadiation.innerHTML = `${data.solarRadiation} kWh`;
