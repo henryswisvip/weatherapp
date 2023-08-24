@@ -1,5 +1,5 @@
 const APIKey = '2fc44795e5144333844795e514d3338f';
-const APIUrl = `https://api.weather.com/v2/pws/observations/current?stationId=ISHENZ61&format=json&units=m&apiKey=${APIKey}`;
+const APIUrl = `https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=${APIKey}=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_uni tid=3&wind_speed_unitid=6&rainfall_unitid=12`;
 const container = document.querySelector('.container');
 const search = document.querySelector('.search-box button');
 const weatherBox = document.querySelector('.weather-box');
@@ -100,15 +100,20 @@ function fetchCurrentWeatherData() {
 
         
             
-            temperature.innerHTML = `${data.metric.temp}<span>°C</span>`;
-            description.innerHTML = `Feels Like: ${data.metric.heatIndex}<span>°C</span>`;
-            humidity.innerHTML = `${data.humidity}%`;
-            wind.innerHTML = `${data.metric.windSpeed} km/h`;
-            solarRadiation.innerHTML = `${data.solarRadiation} kWh`;
-            UV.innerHTML = `${data.uv} mW`;
-           winddir.innerHTML = `${degreesToCompass(data.winddir)}`;
-            windChill.innerHTML = `${data.metric.precipRate.toFixed(1)} mm/hr`;
 
+
+             temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
+            description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
+            humidity.innerHTML = `${data.outdoor.humidity.value}%`;
+            wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`; // Converting m/s to km/h
+            solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
+            UV.innerHTML = `${data.solar_and_uvi.uvi.value}`;
+            winddir.innerHTML = `${degreesToCompass(data.wind.wind_direction.value)}`;
+            windChill.innerHTML = `${data.rainfall.rain_rate.value.toFixed(1)} mm/hr`;
+
+
+
+            
             
             // Show weather data
             weatherBox.style.display = '';
