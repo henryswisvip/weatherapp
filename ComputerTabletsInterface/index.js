@@ -53,53 +53,47 @@ function fetchCurrentWeatherData() {
             const windChill = document.querySelector('.windd .windChill span');
              switch (true) {
 
-                case data.metric.precipRate > 50:
-                    image.src = 'images/heavy rain .png';
-                    break;
-                case data.solarRadiation > 50 && data.metric.precipRate > 10 && data.metric.precipRate < 50:
-                    image.src = 'images/small rain.png';
-                    break;
-                case data.metric.precipRate > 10 && data.metric.precipRate < 50:
-                    image.src = 'images/rain.png';
-                    break;
-
-                case data.metric.precipRate < 10 && data.metric.precipRate > 0:
-                    image.src = 'images/drizzle.png';
-                    break;
-                case data.solarRadiation < 50 && data.metric.precipRate == 0 && data.solarRadiation != 0 && data.metric.temp < 34 :
-                    image.src = 'images/cloudy.png';
-                    break;
-                case data.solarRadiation > 50 && data.solarRadiation < 100 && data.metric.precipRate == 0:
-                    image.src = 'images/partly cloudy.png';
-                    break;
-                case data.metric.temp > 5 && data.metric.temp <= 15:
-                    image.src = 'images/cloud.png';
-                    break;
-                case data.metric.temp > 34 && data.solarRadiation > 10:
-                    image.src = 'images/hot.png';
-                    break;
-                case data.solarRadiation == 0:
-                        image.src = 'images/moon.png';
-                        break;
-                case data.solarRadiation > 100:
-                    image.src = 'images/clear.png';
-                    break;
-
-
-
-                case data.metric.temp < 11:
-                    image.src = 'images/snow.png';
-                    break;
-
-                case data.metric.temp > 15 && data.metric.temp <= 25:
-                    image.src = 'images/clear.png';
-                    break;
-
-
-                default:
-                    image.src = 'images/mist.png';
-                    break;
-            }
+               switch (true) {
+    case data.rainfall.rain_rate.value > 50:
+        image.src = 'images/heavy rain.png';
+        break;
+    case data.solar_and_uvi.solar.value > 50 && data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
+        image.src = 'images/small rain.png';
+        break;
+    case data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
+        image.src = 'images/rain.png';
+        break;
+    case data.rainfall.rain_rate.value < 10 && data.rainfall.rain_rate.value > 0:
+        image.src = 'images/drizzle.png';
+        break;
+    case data.solar_and_uvi.solar.value < 50 && data.rainfall.rain_rate.value == 0 && data.solar_and_uvi.solar.value != 0 && data.outdoor.temperature.value < 34:
+        image.src = 'images/cloudy.png';
+        break;
+    case data.solar_and_uvi.solar.value > 50 && data.solar_and_uvi.solar.value < 100 && data.rainfall.rain_rate.value == 0:
+        image.src = 'images/partly cloudy.png';
+        break;
+    case data.outdoor.temperature.value > 5 && data.outdoor.temperature.value <= 15:
+        image.src = 'images/cloud.png';
+        break;
+    case data.outdoor.temperature.value > 34 && data.solar_and_uvi.solar.value > 10:
+        image.src = 'images/hot.png';
+        break;
+    case data.solar_and_uvi.solar.value == 0:
+        image.src = 'images/moon.png';
+        break;
+    case data.solar_and_uvi.solar.value > 100:
+        image.src = 'images/clear.png';
+        break;
+    case data.outdoor.temperature.value < 11:
+        image.src = 'images/snow.png';
+        break;
+    case data.outdoor.temperature.value > 15 && data.outdoor.temperature.value <= 25:
+        image.src = 'images/clear.png';
+        break;
+    default:
+        image.src = 'images/mist.png';
+        break;
+}
 
         
             
