@@ -50,7 +50,7 @@ function fetchCurrentWeatherData() {
             const windChill = document.querySelector('.windd .windChill span');
             switch (true) {
 
-                case data.metric.precipRate > 50 && data.metric.precipRate < 100:
+                case data.metric.precipRate > 50:
                     image.src = 'images/heavy rain .png';
                     break;
                 case data.solarRadiation > 50 && data.metric.precipRate > 10 && data.metric.precipRate < 50:
@@ -84,7 +84,7 @@ function fetchCurrentWeatherData() {
 
 
 
-                case data.metric.temp <= 5:
+                case data.metric.temp < 11:
                     image.src = 'images/snow.png';
                     break;
 
@@ -101,7 +101,7 @@ function fetchCurrentWeatherData() {
         
             
             temperature.innerHTML = `${data.metric.temp}<span>°C</span>`;
-            description.innerHTML = `Feels Like: ${data.metric.heatIndex}`;
+            description.innerHTML = `Feels Like: ${data.metric.heatIndex}<span>°C</span>`;
             humidity.innerHTML = `${data.humidity}%`;
             wind.innerHTML = `${data.metric.windSpeed} km/h`;
             solarRadiation.innerHTML = `${data.solarRadiation} kWh`;
