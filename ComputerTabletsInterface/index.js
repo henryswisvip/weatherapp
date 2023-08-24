@@ -1,5 +1,4 @@
-const APIKey = '547d3f02-e7c4-46d1-bef9-072d402873d8';
-const APIUrl = `https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=${APIKey}=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_uni tid=3&wind_speed_unitid=6&rainfall_unitid=12`;
+const APIUrl = `https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_uni tid=3&wind_speed_unitid=6&rainfall_unitid=12`;
 const container = document.querySelector('.container');
 const search = document.querySelector('.search-box button');
 const weatherBox = document.querySelector('.weather-box');
