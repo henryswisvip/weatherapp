@@ -1,5 +1,4 @@
-const APIKey = '2fc44795e5144333844795e514d3338f';
-const APIUrl = `https://api.weather.com/v2/pws/observations/current?stationId=ISHENZ61&format=json&units=m&apiKey=${APIKey}`;
+const APIUrl = `https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_uni tid=3&wind_speed_unitid=6&rainfall_unitid=12`;
 const container = document.querySelector('.container');
 const search = document.querySelector('.search-box button');
 const weatherBox = document.querySelector('.weather-box');
@@ -37,7 +36,7 @@ function fetchCurrentWeatherData() {
     fetch(APIUrl)
         .then(response => response.json())
         .then(json => {
-            const data = json.observations[0];
+            const data = json.data;
             console.log(data);
             const image = document.querySelector('.weather-box img');
             const temperature = document.querySelector('.weather-box .temperature');
@@ -50,45 +49,45 @@ function fetchCurrentWeatherData() {
             const windChill = document.querySelector('.windd .windChill span');
             switch (true) {
 
-                case data.metric.precipRate > 50:
+                case data.rainfall.rain_rate.value > 50:
                     image.src = 'images/heavy rain .png';
                     break;
-                case data.solarRadiation > 50 && data.metric.precipRate > 10 && data.metric.precipRate < 50:
+                case data.solar_and_uvi.solar.value > 50 && data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
                     image.src = 'images/small rain.png';
                     break;
-                case data.metric.precipRate > 10 && data.metric.precipRate < 50:
+                case data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
                     image.src = 'images/rain.png';
                     break;
 
-                case data.metric.precipRate < 10 && data.metric.precipRate > 0:
+                case data.rainfall.rain_rate.value < 10 && data.rainfall.rain_rate.value > 0:
                     image.src = 'images/drizzle.png';
                     break;
-                case data.solarRadiation < 50 && data.metric.precipRate == 0 && data.solarRadiation != 0 && data.metric.temp < 34 :
+                case data.solar_and_uvi.solar.value < 50 && data.rainfall.rain_rate.value == 0 && data.solar_and_uvi.solar.value != 0 && data.outdoor.temperature.value < 34 :
                     image.src = 'images/cloudy.png';
                     break;
-                case data.solarRadiation > 50 && data.solarRadiation < 100 && data.metric.precipRate == 0:
+                case data.solar_and_uvi.solar.value > 50 && data.solar_and_uvi.solar.value < 100 && data.rainfall.rain_rate.value == 0:
                     image.src = 'images/partly cloudy.png';
                     break;
-                case data.metric.temp > 5 && data.metric.temp <= 15:
+                case data.outdoor.temperature.value > 5 && data.outdoor.temperature.value <= 15:
                     image.src = 'images/cloud.png';
                     break;
-                case data.metric.temp > 34 && data.solarRadiation > 10:
+                case data.outdoor.temperature.value > 34 && data.solar_and_uvi.solar.value > 10:
                     image.src = 'images/hot.png';
                     break;
-                case data.solarRadiation == 0:
+                case data.solar_and_uvi.solar.value == 0:
                         image.src = 'images/moon.png';
                         break;
-                case data.solarRadiation > 100:
+                case data.solar_and_uvi.solar.value > 100:
                     image.src = 'images/clear.png';
                     break;
 
 
 
-                case data.metric.temp < 11:
+                case data.outdoor.temperature.value < 11:
                     image.src = 'images/snow.png';
                     break;
 
-                case data.metric.temp > 15 && data.metric.temp <= 25:
+                case data.outdoor.temperature.value > 15 && data.outdoor.temperature.value <= 25:
                     image.src = 'images/clear.png';
                     break;
 
@@ -100,14 +99,14 @@ function fetchCurrentWeatherData() {
 
         
             
-            temperature.innerHTML = `${data.metric.temp}<span>°C</span>`;
-            description.innerHTML = `Feels Like: ${data.metric.heatIndex}<span>°C</span>`;
-            humidity.innerHTML = `${data.humidity}%`;
-            wind.innerHTML = `${data.metric.windSpeed} km/h`;
-            solarRadiation.innerHTML = `${data.solarRadiation} kWh`;
-            UV.innerHTML = `${data.uv} mW`;
-           winddir.innerHTML = `${degreesToCompass(data.winddir)}`;
-            windChill.innerHTML = `${data.metric.precipRate.toFixed(1)} mm/hr`;
+            temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
+            description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
+            humidity.innerHTML = `${data.outdoor.humidity.value}%`;
+            wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`; // Converting m/s to km/h
+            solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
+            UV.innerHTML = `${data.solar_and_uvi.uvi.value}`;
+            winddir.innerHTML = `${degreesToCompass(data.wind.wind_direction.value)}`;
+            windChill.innerHTML = `${data.rainfall.rain_rate.value.toFixed(1)} mm/hr`;
 
             
             // Show weather data
