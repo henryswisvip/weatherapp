@@ -106,7 +106,7 @@ function fetchCurrentWeatherData() {
             solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
             UV.innerHTML = `${data.solar_and_uvi.uvi.value}`;
             winddir.innerHTML = `${degreesToCompass(data.wind.wind_direction.value)}`;
-            windChill.innerHTML = `${data.rainfall.rain_rate.value.toFixed(1)} mm/hr`;
+            
 
             
             // Show weather data
