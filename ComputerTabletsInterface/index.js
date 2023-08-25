@@ -6,6 +6,7 @@ const weatherDetails = document.querySelector('.weather-details');
 const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
+const rainRateValue = data.rainfall.rain_rate.value;
 
 function degreesToCompass(degrees) {
     const directionsEnglish = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
@@ -106,7 +107,7 @@ function fetchCurrentWeatherData() {
             solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
             UV.innerHTML = `${data.solar_and_uvi.uvi.value}`;
             winddir.innerHTML = `${degreesToCompass(data.wind.wind_direction.value)}`;
-            windChill.innerHTML = `${data.rainfall.daily.value.toFixed(1)} mm/hr`;
+            windChill.innerHTML = `${rainRateValue.toFixed(1)} mm/hr`;
 
             
             // Show weather data
