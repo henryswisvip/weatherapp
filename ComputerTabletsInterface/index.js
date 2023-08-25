@@ -8,6 +8,7 @@ const error404 = document.querySelector('.not-found');
 const radiation = document.querySelector('.radiation');
 const windd = document.querySelector('.windd');
 
+
 function degreesToCompass(degrees) {
     const directionsEnglish = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
     const directionsChinese = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
