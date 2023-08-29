@@ -101,7 +101,15 @@ function fetchCurrentWeatherData() {
         
             
             temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
+            
+            
+            
+            if (window.location.pathname.includes("/index_cn")) {
+            description.innerHTML = `体感温度: ${data.outdoor.feels_like.value}<span>℃</span>`;
+            } else {
             description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
+            }
+
             humidity.innerHTML = `${data.outdoor.humidity.value}%`;
             wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`; // Converting m/s to km/h
             solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
