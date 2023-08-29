@@ -99,6 +99,8 @@ function fetchCurrentWeatherData() {
             }
 
         
+
+            temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
             const feelsLikeTemperature = data.data.outdoor.feels_like.value;
             const isChinese = window.location.pathname.includes("index_cn");
             if (isChinese) {
@@ -107,9 +109,7 @@ function fetchCurrentWeatherData() {
                 description.innerHTML = `Feels Like: ${feelsLikeTemperature}<span>°C</span>`;
             }
         });
-}
-            temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
-            
+}      
            
             humidity.innerHTML = `${data.outdoor.humidity.value}%`;
             wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`; // Converting m/s to km/h
