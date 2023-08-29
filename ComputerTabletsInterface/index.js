@@ -128,7 +128,7 @@ function fetchCurrentWeatherData() {
             weatherDetails.classList.add('fadeIn');
             container.style.height = '590px';
 
-        .catch(error => {
+            .catch(error => {
             console.log(error);
         });
 }
