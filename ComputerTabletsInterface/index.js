@@ -128,10 +128,6 @@ function fetchCurrentWeatherData() {
             weatherDetails.classList.add('fadeIn');
             container.style.height = '590px';
 
-            .catch(error => {
-            console.log(error);
-        });
-}
 
 fetchCurrentWeatherData();
 setInterval(fetchCurrentWeatherData, 10000);
