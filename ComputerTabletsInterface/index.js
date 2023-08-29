@@ -99,9 +99,18 @@ function fetchCurrentWeatherData() {
             }
 
         
-            
+            const feelsLikeTemperature = data.data.outdoor.feels_like.value;
+            const isChinese = window.location.pathname.includes("index_cn");
+            if (isChinese) {
+                description.innerHTML = `体感温度: ${feelsLikeTemperature}<span>℃</span>`;
+            } else {
+                description.innerHTML = `Feels Like: ${feelsLikeTemperature}<span>°C</span>`;
+            }
+        });
+}
             temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
-            description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
+            
+           
             humidity.innerHTML = `${data.outdoor.humidity.value}%`;
             wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`; // Converting m/s to km/h
             solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
