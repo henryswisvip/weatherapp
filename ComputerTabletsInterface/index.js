@@ -127,7 +127,7 @@ function fetchCurrentWeatherData() {
             weatherBox.classList.add('fadeIn');
             weatherDetails.classList.add('fadeIn');
             container.style.height = '590px';
-        })
+
         .catch(error => {
             console.log(error);
         });
