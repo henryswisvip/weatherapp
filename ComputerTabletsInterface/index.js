@@ -95,7 +95,7 @@ function fetchCurrentWeatherData() {
                     image.src = 'images/mist.png';
                     break;
             }
-
+    }
         
             
             temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
