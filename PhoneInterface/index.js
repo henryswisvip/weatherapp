@@ -4,7 +4,7 @@ const search = document.querySelector('.search-box button');
 const weatherBox = document.querySelector('.weather-box');
 const weatherDetails = document.querySelector('.weather-details');
 const error404 = document.querySelector('.not-found');
-function fetchCurrentWeatherData() {
+
 function fetchCurrentWeatherData() {
     fetch(APIUrl)
         .then(response => response.json())
@@ -69,14 +69,14 @@ function fetchCurrentWeatherData() {
                     break;
             }
 
-        temperature.innerHTML = `${data.metric.temp}<span>°C</span>`;
+            temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
         if (window.location.pathname.includes("/index_cn")) {
             description.innerHTML = `体感温度: ${data.outdoor.feels_like.value}<span>℃</span>`;
             } else {
             description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
             }
-        humidity.innerHTML = `${data.humidity}%`;
-        wind.innerHTML = `${data.metric.windSpeed} km/h`;
+            humidity.innerHTML = `${data.outdoor.humidity.value}%`;
+            wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`;
 
         // Show weather data
         weatherBox.style.display = '';
