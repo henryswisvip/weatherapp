@@ -91,8 +91,6 @@ function fetchCurrentWeatherData() {
                 case data.outdoor.temperature.value > 15 && data.outdoor.temperature.value <= 25:
                     image.src = 'images/clear.png';
                     break;
-
-
                 default:
                     image.src = 'images/mist.png';
                     break;
