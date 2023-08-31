@@ -324,13 +324,13 @@ body{
 
 
 #warningMessage {
-    position: fixed; /* This will make the warning message stay at the top-right corner even when the page is scrolled. */
-    top: 162px; /* Adjust as needed */
-    right: 404px; /* Adjust as needed */
+    position: absolute; /* This will make the warning message stay at the top-right corner even when the page is scrolled. */
+    top: -44px; /* Adjust as needed */
+    right: -23px; /* Adjust as needed */
     z-index: 1000; /* This will ensure the warning is on top of other elements */
     background-color: #ffcc00; /* A yellow background for visibility */
-    padding-top: 20px;
-    padding-right: 20px;
+    padding-top: 23px;
+    padding-right: 0px;
     padding-left: 20px;
     padding-bottom: 20px;
     border-radius: 5px; /* Rounded corners for aesthetics */
