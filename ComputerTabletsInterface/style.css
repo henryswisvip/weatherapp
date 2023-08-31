@@ -14,7 +14,7 @@
 	float: right;
 	margin-right: 100px;
 	
-	
+
 
   }
 
@@ -22,7 +22,7 @@
     position: absolute !important;
     width: 380px !important;
     height: 250px !important;
-    margin-top: 200px !important;
+    margin-top: 230px !important;
     margin-left: 373px!important;
     margin-right: -129px!important;
     margin-bottom: -129px!important;
@@ -202,6 +202,7 @@ body{
     margin-left: auto;
     position: relative;
     top: -520px;
+    margin-top: 50px;
 }
 
 .radiation .SolarRadiation, .radiation .UV{
@@ -260,6 +261,18 @@ body{
     
 }
 
+.fa-solid.fa-hurricane {
+    font-weight: 900; /* Adjust the font weight if needed */
+    font-size: 46px; /* Adjust the font size as needed */
+    margin-right: 5px;
+    margin-top: 92px;
+    padding-top: 303px;
+    padding-right: 303px;
+    padding-left: 303px;
+    padding-bottom: 303px;
+    margin-bottom: 8px;
+}
+
 .windd .winddir, .windd .windChill{
     display: flex;
     align-items: center;
@@ -310,9 +323,27 @@ body{
 
 
 
+#warningMessage {
+    position: fixed; /* This will make the warning message stay at the top-right corner even when the page is scrolled. */
+    top: 162px; /* Adjust as needed */
+    right: 404px; /* Adjust as needed */
+    z-index: 1000; /* This will ensure the warning is on top of other elements */
+    background-color: #ffcc00; /* A yellow background for visibility */
+    padding-top: 20px;
+    padding-right: 20px;
+    padding-left: 20px;
+    padding-bottom: 20px;
+    border-radius: 5px; /* Rounded corners for aesthetics */
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.2); /* A little shadow for depth */
+}
 
-
-
+#warningMessage.red {
+    background-color: red; /* Change the background color to red when the warning is red */
+    /* Add any additional CSS properties specific to the red warning here */
+}
+#warningMessage.yellow {
+    background-color: yellow;
+}
 
 
 
@@ -348,6 +379,8 @@ body{
     animation: 0.5s fadeIn forwards;
     animation-delay: 0.5s;
 }
+
+
 
 @keyframes fadeIn{
     to {
