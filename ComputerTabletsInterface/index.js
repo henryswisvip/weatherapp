@@ -202,40 +202,36 @@ async function fetchWeatherWarning() {
         
         if (response.ok) {
             const data = await response.json();
-            const typhoonWarnings = data.warning.filter(warning => warning.type === "1001");
+           
             if (data.code === "200" && data.warning && data.warning.length > 0) {
+                const typhoonWarnings = data.warning.filter(warning => warning.type === "1001");
                 
-                
-              
-                
-                if (typhoonWarnings.severityColor === "Yellow") {
-                    var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
+                if (typhoonWarnings.length > 0) {
+                    const severityColor = typhoonWarnings[0].severityColor;
+                    const message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
                     document.getElementById('warningMessage').innerText = message;
-                    document.getElementById('warningMessage').classList.add('yellow');
+                    
+                    if (severityColor === "Yellow") {
+                        document.getElementById('warningMessage').classList.add('yellow');
+                    } else if (severityColor === "Red") {
+                        document.getElementById('warningMessage').classList.add('red');
+                    } else if (severityColor === "Orange") {
+                        document.getElementById('warningMessage').classList.add('orange');
+                    }
+                    
+                    const iconElement = document.querySelector('.container .search-box .fa-hurricane');
+                    
+                    if (severityColor === "Yellow") {
+                        iconElement.style.color = "#f7ef02"; // Yellow color
+                    } else if (severityColor === "Red") {
+                        iconElement.style.color = "red"; // Red color
+                    } else if (severityColor === "Orange") {
+                        iconElement.style.color = "orange"; // Orange color
+                    }
                 }
-                if (typhoonWarnings.severityColor === "Red") {
-                    var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
-                    document.getElementById('warningMessage').innerText = message;
-                    document.getElementById('warningMessage').classList.add('red');
-                }
-                if (typhoonWarnings.severityColor === "Orange") {
-                    var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
-                    document.getElementById('warningMessage').innerText = message;
-                    document.getElementById('warningMessage').classList.add('Orange');
-                }
+            } else {
+                console.error("Failed to retrieve data from API.");
             }
-        } else {
-            console.error("Failed to retrieve data from API.");
-        }
-
-
-        var iconElement = document.querySelector('.container .search-box .fa-hurricane');
-
-
-        if (severityColor === "Yellow") {
-            iconElement.style.color = "#f7ef02"; // Yellow color
-        } else if (severityColor === "Red") {
-            iconElement.style.color = "red"; // Red color
         }
     } catch (error) {
         console.error("An error occurred:", error);
