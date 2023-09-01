@@ -204,9 +204,9 @@ async function fetchWeatherWarning() {
             const data = await response.json();
 
             if (data.code === "200" && data.warning && data.warning.length > 0) {
-                const severityColor = data.warning[0].severityColor;
                 
-                const typhoonWarnings = data.warning.filter(warning => warning.type === '1001');
+                
+                const typhoonWarnings = data.warning.filter(warning => warning.type === "1001");
                 
                 if (typhoonWarnings.severityColor === "Yellow") {
                     var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
