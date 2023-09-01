@@ -220,7 +220,11 @@ async function fetchWeatherWarning() {
                     document.getElementById('warningMessage').innerText = message;
                     document.getElementById('warningMessage').classList.add('red');
                 }
-                
+                    if (severityColor === "Orange") {
+                    var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
+                    document.getElementById('warningMessage').innerText = message;
+                    document.getElementById('warningMessage').classList.add('Orange');
+                }
             }
         } else {
             console.error("Failed to retrieve data from API.");
