@@ -206,10 +206,6 @@ async function fetchWeatherWarning() {
             if (data.code === "200" && data.warning && data.warning.length > 0) {
                 const severityColor = data.warning[0].severityColor;
 
-                if (severityColor === "Yellow" || severityColor === "Red") {
-                    var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
-                    document.getElementById('warningMessage').innerText = message;
-                }
                 if (severityColor === "Yellow") {
                     var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
                     document.getElementById('warningMessage').innerText = message;
@@ -220,7 +216,7 @@ async function fetchWeatherWarning() {
                     document.getElementById('warningMessage').innerText = message;
                     document.getElementById('warningMessage').classList.add('red');
                 }
-                    if (severityColor === "Orange") {
+                if (severityColor === "Orange") {
                     var message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
                     document.getElementById('warningMessage').innerText = message;
                     document.getElementById('warningMessage').classList.add('Orange');
