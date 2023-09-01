@@ -199,10 +199,10 @@ async function fetchWeatherWarning() {
 
     try {
         const response = await fetch(apiUrl);
-        const typhoonWarnings = data.warning.filter(warning => warning.type === "1001");
+        
         if (response.ok) {
             const data = await response.json();
-
+            const typhoonWarnings = data.warning.filter(warning => warning.type === "1001");
             if (data.code === "200" && data.warning && data.warning.length > 0) {
                 
                 
