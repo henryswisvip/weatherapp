@@ -194,61 +194,6 @@ function fetchHistoricalWeatherData() {
 fetchHistoricalWeatherData();
 setInterval(fetchHistoricalWeatherData, 12 * 60 * 60 * 1000);
 
-async function fetchWeatherWarning() {
-    const apiUrl = "https://devapi.qweather.com/v7/warning/now?location=101280601&key=7d50f04b89164bebb7905e5eabd2637a";
-
-    try {
-        const response = await fetch(apiUrl);
-        
-        if (response.ok) {
-            const data = await response.json();
-           
-            if (data.code === "200" && data.warning && data.warning.length > 0) {
-                const typhoonWarnings = data.warning.filter(warning => warning.type === "1001");
-                
-                if (typhoonWarnings.length > 0) {
-                    const severityColor = typhoonWarnings[0].severityColor;
-                    const message = `${severityColor} typhoon warning for Shenzhen. NO SCHOOL!`;
-                    document.getElementById('warningMessage').innerText = message;
-                    
-                    if (severityColor === "Yellow") {
-                        document.getElementById('warningMessage').classList.add('yellow');
-                    } else if (severityColor === "Red") {
-                        document.getElementById('warningMessage').classList.add('red');
-                    } else if (severityColor === "Orange") {
-                        document.getElementById('warningMessage').classList.add('orange');
-                    }
-                    
-                    const iconElement = document.querySelector('.container .search-box .fa-hurricane');
-                    
-                    if (severityColor === "Yellow") {
-                        iconElement.style.color = "#f7ef02"; // Yellow color
-                    } else if (severityColor === "Red") {
-                        iconElement.style.color = "red"; // Red color
-                    } else if (severityColor === "Orange") {
-                        iconElement.style.color = "orange"; // Orange color
-                    }
-                }
-            } else {
-                console.error("Failed to retrieve data from API.");
-            }
-        }
-    } catch (error) {
-        console.error("An error occurred:", error);
-    }
-}
-
-function displayWarningIcon() {
-    // Implement logic to display an actual warning icon on your webpage.
-    console.log("⚠️ Warning Icon Displayed");
-}
-
-function displayWarningMessage(message) {
-    // Display the warning message. This can be adjusted to display on your website.
-    console.log(message);
-}
-
-
-
-// Call the fetch function
-fetchWeatherWarning();
+languageButton.addEventListener('click', () => {
+    // Code to change the language of the page goes here
+});
