@@ -102,6 +102,12 @@ function fetchCurrentWeatherData() {
             
             temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
             
+
+
+            humidity = data.outdoor.humidity.value;
+            temperature = data.outdoor.temperature.value
+
+
               // Takes in temperature (in Celsius) and humidity (percentage)
 function getFeelsLikeTemp(temperature, humidity) {
 
@@ -115,7 +121,7 @@ function getFeelsLikeTemp(temperature, humidity) {
   
   }
   
-  console.log(humidity + temperature)
+  
   var heatIndex1 = getFeelsLikeTemp(temperature,humidity);
  
   console.log("It feels like " + heatIndex1 + "°C outside");
