@@ -104,11 +104,10 @@ function fetchCurrentWeatherData() {
             
 
 
-       
+            
+            var h = float(humidity.value);
+            var t = float(temperature.value)
 
-
-            var h = data.outdoor.humidity.value;
-            var t = data.outdoor.temperature.value
 
 
               // Takes in temperature (in Celsius) and humidity (percentage)
