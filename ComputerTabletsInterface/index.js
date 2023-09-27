@@ -115,6 +115,7 @@ function getFeelsLikeTemp(temperature, humidity) {
   
   }
   
+  console.log(humidity + temperature)
   var heatIndex1 = getFeelsLikeTemp(temperature,humidity);
  
   console.log("It feels like " + heatIndex1 + "°C outside");
