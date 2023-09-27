@@ -102,14 +102,32 @@ function fetchCurrentWeatherData() {
             
             temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
             
-            
+              // Takes in temperature (in Celsius) and humidity (percentage)
+function getFeelsLikeTemp(temperature, humidity) {
+
+    // Calculate heat index based on temperature and humidity
+    let heatIndex = temperature + (humidity/100) * (temperature-14.4) + 46.4;
+  
+    // Round heat index to nearest whole number
+    heatIndex = Math.round(heatIndex);
+  
+    return heatIndex;
+  
+  }
+  
+  
+  let feelsLike = getFeelsLikeTemp(temp, humidity);
+  
+  console.log("It feels like " + feelsLike + "°C outside");
             
             if (window.location.pathname.includes("/index_cn")) {
-            description.innerHTML = `体感温度: ${data.outdoor.feels_like.value}<span>℃</span>`;
+            description.innerHTML = `体感温度: ${feelsLike}<span>℃</span>`;
             } else {
-            description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
+            description.innerHTML = `Feels Like: ${feelsLike}<span>°C</span>`;
             }
 
+    
+      
             humidity.innerHTML = `${data.outdoor.humidity.value}%`;
             wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`; // Converting m/s to km/h
             solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
@@ -131,6 +149,7 @@ function fetchCurrentWeatherData() {
             console.log(error);
         });
 }
+
 
 
 fetchCurrentWeatherData();
