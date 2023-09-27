@@ -104,9 +104,7 @@ function fetchCurrentWeatherData() {
             
 
 
-            humidity = data.outdoor.humidity.value;
-            temperature = data.outdoor.temperature.value
-
+       
 
 
             var h = data.outdoor.humidity.value;
