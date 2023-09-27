@@ -108,11 +108,16 @@ function fetchCurrentWeatherData() {
             temperature = data.outdoor.temperature.value
 
 
+
+            var h = data.outdoor.humidity.value;
+            var t = data.outdoor.temperature.value
+
+
               // Takes in temperature (in Celsius) and humidity (percentage)
-function getFeelsLikeTemp(temperature, humidity) {
+function getFeelsLikeTemp(t, h) {
 
     // Calculate heat index based on temperature and humidity
-    let heatIndex = temperature + (humidity/100) * (temperature-14.4) + 46.4;
+    let heatIndex = t + (h/100) * (t-14.4) + 46.4;
   
     // Round heat index to nearest whole number
     heatIndex = Math.round(heatIndex);
@@ -122,7 +127,7 @@ function getFeelsLikeTemp(temperature, humidity) {
   }
   
   
-  var heatIndex1 = getFeelsLikeTemp(temperature,humidity);
+  var heatIndex1 = getFeelsLikeTemp(t,h);
  
   console.log("It feels like " + heatIndex1 + "°C outside");
             
