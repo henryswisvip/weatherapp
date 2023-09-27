@@ -117,7 +117,7 @@ function getFeelsLikeTemp(temperature, humidity) {
   
   
  
-  console.log("It feels like " + feelsLike + "°C outside");
+  console.log("It feels like " + heatIndex + "°C outside");
             
             if (window.location.pathname.includes("/index_cn")) {
             description.innerHTML = `体感温度: ${heatIndex}<span>℃</span>`;
