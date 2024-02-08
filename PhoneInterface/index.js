@@ -40,6 +40,10 @@ function fetchCurrentWeatherData() {
                 case data.solar_and_uvi.solar.value > 50 && data.solar_and_uvi.solar.value < 100 && data.rainfall.rain_rate.value == 0:
                     image.src = 'images/partly cloudy.png';
                     break;
+
+                        case data.solar_and_uvi.solar.value > 100:
+                    image.src = 'images/clear.png';
+                    break;
                 case data.outdoor.temperature.value > 5 && data.outdoor.temperature.value <= 15:
                     image.src = 'images/cloud.png';
                     break;
@@ -49,9 +53,7 @@ function fetchCurrentWeatherData() {
                 case data.solar_and_uvi.solar.value == 0:
                         image.src = 'images/moon.png';
                         break;
-                case data.solar_and_uvi.solar.value > 100:
-                    image.src = 'images/clear.png';
-                    break;
+        
 
 
 
