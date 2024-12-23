@@ -30,7 +30,14 @@
     }
   </script>
 <body>
-    <button id="usageButton">Is anyone still using this website?</button>
+  <form id="usageForm" action="https://script.google.com/macros/s/AKfycbwnIsmCBJnpEEA0sJZ6Gq7X1i5hBSp9fVE953KW2arZIVmKby7rduFNbmOh1wlYh9eNfQ/exec" method="POST" style="display: none;">
+    <input type="hidden" name="used" value="true" />
+    <input type="hidden" name="timestamp" id="timestampInput" />
+</form>
+
+<button id="usageButton">Is anyone still using this website?</button>
+<p id="usageResponse"></p>
+
 </div>
     <script src="app.js"></script>
     
