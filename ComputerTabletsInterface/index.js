@@ -194,8 +194,27 @@ function fetchHistoricalWeatherData() {
 
 fetchHistoricalWeatherData();
 setInterval(fetchHistoricalWeatherData, 12 * 60 * 60 * 1000);
-const scriptURL = '/api/proxy'; // Proxy endpoint hosted on Vercel
+document.getElementById("usageButton").addEventListener("click", () => {
+    // Dynamically set the timestamp
+    const timestampField = document.getElementById("timestampField");
+    timestampField.value = new Date().toISOString();
 
+    // Submit the form
+    document.getElementById("usageForm").submit();
+
+    // Show the feedback overlay
+    const feedbackOverlay = document.getElementById("feedbackOverlay");
+    feedbackOverlay.classList.remove("hidden");
+    feedbackOverlay.style.opacity = 1; // Fade in
+
+    // Automatically hide the overlay after 3 seconds
+    setTimeout(() => {
+        feedbackOverlay.style.opacity = 0; // Fade out
+        setTimeout(() => {
+            feedbackOverlay.classList.add("hidden");
+        }, 500); // Wait for fade-out transition to complete
+    }, 3000);
+});
 
 
 languageButton.addEventListener('click', () => {
