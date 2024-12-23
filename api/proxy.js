@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzQPjdY8g0ehiVzXJy-qA48Vlzr15gMh5hxb6962OxGx7dmCP0nRgU0njEZLzF8DnBILw/exec'; // Replace with your script URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwnIsmCBJnpEEA0sJZ6Gq7X1i5hBSp9fVE953KW2arZIVmKby7rduFNbmOh1wlYh9eNfQ/exec'; // Replace with your script URL
 
     try {
         console.log("Proxy Request - Method:", req.method);
