@@ -355,3 +355,42 @@ body{
         opacity: 1;
     }
 }
+#usageButton {
+    position: absolute; /* Position it relative to the main container */
+    top: 10px; /* Adjust the vertical position */
+    left: 50%; /* Center it horizontally */
+    transform: translateX(-50%); /* Center alignment */
+    padding: 10px 20px; /* Add some padding */
+    background-color: #dff6ff; /* Match your theme */
+    color: #06283D; /* Button text color */
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 10; /* Ensure it appears above other elements */
+    transition: background-color 0.3s ease;
+}
+#feedbackMessage {
+    color: #fff;
+    font-size: 1rem; /* Smaller text size */
+    font-weight: 500; /* Semi-bold for better readability */
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #00c6ff, #0072ff); /* Gradient background */
+    padding: 15px 30px; /* Smaller padding for better fit */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4); /* Add subtle shadow */
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5); /* Softer text shadow */
+    max-width: 80%; /* Restrict width for smaller screens */
+    word-wrap: break-word; /* Ensure text wraps if too long */
+    animation: fadeInScale 0.5s ease forwards; /* Smooth entrance animation */
+}
+#usageButton:hover {
+    background-color: #06283D;
+    color: #fff;
+}
+.hidden {
+    display: none;
+    opacity: 0;
+}

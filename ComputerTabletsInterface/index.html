@@ -2,9 +2,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<p id="usageResponse"></p>
+
 <html lang="en">
 
 <head>
+  
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,6 +30,20 @@
     }
   </script>
 <body>
+      <form id="usageForm" action="https://docs.google.com/forms/d/e/1FAIpQLSePN4HR_fgc3Jo03KbezsoCcnHLuY9Hp15Wtnl_S5YpEZTH5A/formResponse" method="POST" target="hidden_iframe">
+        <!-- Pre-filled "Yes" value for the 'used' field -->
+        <input type="hidden" name="entry.1234567890" id="usedField" value="Yes" />
+        <input type="hidden" name="entry.9876543210" id="timestampField" />
+    </form>
+    <button id="usageButton">Is anyone still using this website?</button>
+    <p id="usageResponse"></p>
+    <iframe name="hidden_iframe" style="display: none;"></iframe>
+    
+    <div id="feedbackOverlay" class="hidden">
+        <p id="feedbackMessage">Thanks for letting us know!</p>
+    </div>
+    
+  
 </div>
     <script src="app.js"></script>
     
