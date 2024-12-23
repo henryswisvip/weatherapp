@@ -30,14 +30,25 @@
     }
   </script>
 <body>
-  <form id="usageForm" action="https://script.google.com/macros/s/AKfycbwnIsmCBJnpEEA0sJZ6Gq7X1i5hBSp9fVE953KW2arZIVmKby7rduFNbmOh1wlYh9eNfQ/exec" method="POST" style="display: none;">
-    <input type="hidden" name="used" value="true" />
-    <input type="hidden" name="timestamp" id="timestampInput" />
+    <!-- Hidden Form -->
+<form id="usageForm" action="https://docs.google.com/forms/d/e/1FAIpQLSePN4HR_fgc3Jo03KbezsoCcnHLuY9Hp15Wtnl_S5YpEZTH5A/formResponse" method="POST" target="hidden_iframe">
+    <input type="hidden" name="entry.1234567890" id="usedField" value="Yes" />
+    <input type="hidden" name="entry.9876543210" id="timestampField" />
 </form>
 
+<!-- Button to trigger form submission -->
 <button id="usageButton">Is anyone still using this website?</button>
-<p id="usageResponse"></p>
 
+<!-- Feedback overlay -->
+<div id="feedbackOverlay" class="hidden">
+    <p id="feedbackMessage">Thanks for letting us know!</p>
+</div>
+
+<!-- Hidden iframe for form submission -->
+<iframe name="hidden_iframe" style="display: none;"></iframe>
+
+    
+  
 </div>
     <script src="app.js"></script>
     
