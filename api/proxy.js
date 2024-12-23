@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxmBAK_XcA0PGw3xR6Eh08_hNRrSYHmbadVyahfS4J7ZdOYt181yAIO8x86HOMNHcDgNA/exec'; // Replace YOUR_SCRIPT_ID
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzQPjdY8g0ehiVzXJy-qA48Vlzr15gMh5hxb6962OxGx7dmCP0nRgU0njEZLzF8DnBILw/exec'; // Replace YOUR_SCRIPT_ID
     
     try {
         // Forward the request to Google Apps Script
