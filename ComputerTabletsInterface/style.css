@@ -355,3 +355,24 @@ body{
         opacity: 1;
     }
 }
+#usageButton {
+    position: absolute; /* Position it relative to the main container */
+    top: 10px; /* Adjust the vertical position */
+    left: 50%; /* Center it horizontally */
+    transform: translateX(-50%); /* Center alignment */
+    padding: 10px 20px; /* Add some padding */
+    background-color: #dff6ff; /* Match your theme */
+    color: #06283D; /* Button text color */
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 10; /* Ensure it appears above other elements */
+    transition: background-color 0.3s ease;
+}
+
+#usageButton:hover {
+    background-color: #06283D;
+    color: #fff;
+}
