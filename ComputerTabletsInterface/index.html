@@ -30,23 +30,18 @@
     }
   </script>
 <body>
-    <!-- Hidden Form -->
-<form id="usageForm" action="https://docs.google.com/forms/d/e/1FAIpQLSePN4HR_fgc3Jo03KbezsoCcnHLuY9Hp15Wtnl_S5YpEZTH5A/formResponse" method="POST" target="hidden_iframe">
-    <input type="hidden" name="entry.1234567890" id="usedField" value="Yes" />
-    <input type="hidden" name="entry.9876543210" id="timestampField" />
-</form>
-
-<!-- Button to trigger form submission -->
-<button id="usageButton">Is anyone still using this website?</button>
-
-<!-- Feedback overlay -->
-<div id="feedbackOverlay" class="hidden">
-    <p id="feedbackMessage">Thanks for letting us know!</p>
-</div>
-
-<!-- Hidden iframe for form submission -->
-<iframe name="hidden_iframe" style="display: none;"></iframe>
-
+    <form id="usageForm" action="https://docs.google.com/forms/d/e/1FAIpQLSePN4HR_fgc3Jo03KbezsoCcnHLuY9Hp15Wtnl_S5YpEZTH5A/formResponse" method="POST" target="hidden_iframe">
+        <!-- Pre-filled "Yes" value for the 'used' field -->
+        <input type="hidden" name="entry.1234567890" id="usedField" value="Yes" />
+        <input type="hidden" name="entry.9876543210" id="timestampField" />
+    </form>
+    <button id="usageButton">Is anyone still using this website?</button>
+    <p id="usageResponse"></p>
+    <iframe name="hidden_iframe" style="display: none;"></iframe>
+    
+    <div id="feedbackOverlay" class="hidden">
+        <p id="feedbackMessage">Thanks for letting us know!</p>
+    </div>
     
   
 </div>
