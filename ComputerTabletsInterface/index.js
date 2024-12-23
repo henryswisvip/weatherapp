@@ -196,34 +196,6 @@ fetchHistoricalWeatherData();
 setInterval(fetchHistoricalWeatherData, 12 * 60 * 60 * 1000);
 const scriptURL = '/api/proxy'; // Proxy endpoint hosted on Vercel
 
-document.getElementById("usageButton").addEventListener("click", () => {
-    const usageResponse = document.getElementById("usageResponse");
-
-    usageResponse.innerText = "Submitting...";
-
-    fetch(scriptURL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            used: true,
-            timestamp: new Date().toISOString()
-        })
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                usageResponse.innerText = "Thanks for letting us know!";
-                document.getElementById("usageButton").disabled = true;
-            } else {
-                usageResponse.innerText = "Error: " + data.message;
-                console.error("Server error:", data.message);
-            }
-        })
-        .catch(error => {
-            usageResponse.innerText = "Network error. Please try again.";
-            console.error("Network error:", error);
-        });
-});
 
 
 languageButton.addEventListener('click', () => {
