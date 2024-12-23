@@ -195,6 +195,35 @@ function fetchHistoricalWeatherData() {
 fetchHistoricalWeatherData();
 setInterval(fetchHistoricalWeatherData, 12 * 60 * 60 * 1000);
 
+document.getElementById("usageButton").addEventListener("click", () => {
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxmBAK_XcA0PGw3xR6Eh08_hNRrSYHmbadVyahfS4J7ZdOYt181yAIO8x86HOMNHcDgNA/exec';
+    document.getElementById("usageResponse").innerText = "Submitting...";
+
+    fetch(scriptURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            used: true,
+            timestamp: new Date().toISOString()
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById("usageResponse").innerText = "Thanks for letting us know!";
+                document.getElementById("usageButton").disabled = true;
+            } else {
+                document.getElementById("usageResponse").innerText = "Error: " + data.message;
+                console.error("Server error:", data.message);
+            }
+        })
+        .catch(error => {
+            document.getElementById("usageResponse").innerText = "Network error. Please try again.";
+            console.error("Network error:", error);
+        });
+});
+
 languageButton.addEventListener('click', () => {
     // Code to change the language of the page goes here
 });
+// Add event listener for the "Is anyone still using this website?" button
