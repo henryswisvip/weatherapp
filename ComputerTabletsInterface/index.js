@@ -196,7 +196,7 @@ fetchHistoricalWeatherData();
 setInterval(fetchHistoricalWeatherData, 12 * 60 * 60 * 1000);
 
 document.getElementById("usageButton").addEventListener("click", () => {
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzfvgL0UO0iLhSv4K_FHypXepHFNe-N3hJhJLT3ZlbXRehHM2-OdMQ-BD3OFNVlrcPsNA/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxmBAK_XcA0PGw3xR6Eh08_hNRrSYHmbadVyahfS4J7ZdOYt181yAIO8x86HOMNHcDgNA/exec';
     document.getElementById("usageResponse").innerText = "Submitting...";
 
     fetch(scriptURL, {
