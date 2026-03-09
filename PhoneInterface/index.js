@@ -1,95 +1,141 @@
-const APIUrl = `https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_uni tid=3&wind_speed_unitid=6&rainfall_unitid=12`;
-const container = document.querySelector('.container');
-const search = document.querySelector('.search-box button');
-const weatherBox = document.querySelector('.weather-box');
-const weatherDetails = document.querySelector('.weather-details');
-const error404 = document.querySelector('.not-found');
+const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
 
-function fetchCurrentWeatherData() {
-    fetch(APIUrl)
-        .then(response => response.json())
-        .then(json => {
-             const data = json.data;
-            console.log(data);
-        const image = document.querySelector('.weather-box img');
-            const temperature = document.querySelector('.weather-box .temperature');
-            const description = document.querySelector('.weather-box .description');
-            const humidity = document.querySelector('.weather-details .humidity span');
-            const wind = document.querySelector('.weather-details .wind span');
-            const solarRadiation = document.querySelector('.radiation .SolarRadiation span');
-            const UV = document.querySelector('.radiation .UV span');
-            const winddir = document.querySelector('.windd .winddir span');
-            const windChill = document.querySelector('.windd .windChill span');
-            switch (true) {
-                case data.rainfall.rain_rate.value > 50:
-                    image.src = 'images/heavy rain .png';
-                    break;
-                case data.solar_and_uvi.solar.value > 50 && data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
-                    image.src = 'images/small rain.png';
-                    break;
-                case data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
-                    image.src = 'images/rain.png';
-                    break;
+const isChinese = window.location.pathname.includes("index_cn");
+const text = {
+    feelsLike: isChinese ? "体感温度：" : "Feels like: ",
+    updated: isChinese ? "更新时间：" : "Last updated: ",
+    rainy: isChinese ? "降雨中" : "Rain right now",
+    sunny: isChinese ? "晴朗温暖" : "Sunny and warm",
+    cool: isChinese ? "天气偏凉" : "Cool weather",
+    stable: isChinese ? "天气平稳" : "Stable conditions",
+    loadingError: isChinese ? "实时数据加载失败" : "Could not load live data"
+};
+let hasLoadedOnce = false;
 
-                case data.rainfall.rain_rate.value < 10 && data.rainfall.rain_rate.value > 0:
-                    image.src = 'images/drizzle.png';
-                    break;
-                case data.solar_and_uvi.solar.value < 50 && data.rainfall.rain_rate.value == 0 && data.solar_and_uvi.solar.value != 0 && data.outdoor.temperature.value < 34 :
-                    image.src = 'images/cloudy.png';
-                    break;
-                case data.solar_and_uvi.solar.value > 50 && data.solar_and_uvi.solar.value < 100 && data.rainfall.rain_rate.value == 0:
-                    image.src = 'images/partly cloudy.png';
-                    break;
-            case data.solar_and_uvi.solar.value == 0:
-                        image.src = 'images/moon.png';
-                        break;
-                        case data.solar_and_uvi.solar.value > 100:
-                    image.src = 'images/clear.png';
-                    break;
-                case data.outdoor.temperature.value > 5 && data.outdoor.temperature.value <= 15:
-                    image.src = 'images/cloud.png';
-                    break;
-                case data.outdoor.temperature.value > 34 && data.solar_and_uvi.solar.value > 10:
-                    image.src = 'images/hot.png';
-                    break;
-    
-        
-
-
-
-                case data.outdoor.temperature.value < 11:
-                    image.src = 'images/snow.png';
-                    break;
-
-                case data.outdoor.temperature.value > 15 && data.outdoor.temperature.value <= 25:
-                    image.src = 'images/clear.png';
-                    break;
-
-
-                default:
-                    image.src = 'images/mist.png';
-                    break;
-            }
-
-            temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
-        if (window.location.pathname.includes("/index_cn")) {
-            description.innerHTML = `体感温度: ${data.outdoor.feels_like.value}<span>℃</span>`;
-            } else {
-            description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
-            }
-            humidity.innerHTML = `${data.outdoor.humidity.value}%`;
-            wind.innerHTML = `${(data.wind.wind_speed.value * 3.6).toFixed(1)} km/h`;
-
-        // Show weather data
-        weatherBox.style.display = '';
-        weatherDetails.style.display = '';
-        weatherBox.classList.add('fadeIn');
-        weatherDetails.classList.add('fadeIn');
-        container.style.height = '590px';
-    })
-    .catch(error => {
-        console.log(error);
-    });
+function getValue(node, fallback = "--") {
+    return typeof node?.value !== "undefined" ? node.value : fallback;
 }
-    fetchCurrentWeatherData();
-    setInterval(fetchCurrentWeatherData, 10000);
+
+function formatNumber(value, digits = 1) {
+    return Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : "--";
+}
+
+function degreesToCompass(degrees) {
+    const englishDirections = ["North", "NE", "East", "SE", "South", "SW", "West", "NW"];
+    const chineseDirections = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
+    const directions = isChinese ? chineseDirections : englishDirections;
+    const normalized = Number(degrees);
+    if (!Number.isFinite(normalized)) return "--";
+    const index = Math.round((normalized % 360) / 45) % 8;
+    return directions[index];
+}
+
+function selectWeatherIcon(data) {
+    const temperature = Number(getValue(data.outdoor?.temperature));
+    const solar = Number(getValue(data.solar_and_uvi?.solar));
+    const rainRate = Number(getValue(data.rainfall?.rain_rate));
+
+    if (rainRate > 50) return "images/heavy rain .png";
+    if (rainRate > 10 && solar > 50) return "images/small rain.png";
+    if (rainRate > 10) return "images/rain.png";
+    if (rainRate > 0) return "images/drizzle.png";
+    if (solar === 0) return "images/moon.png";
+    if (temperature < 11) return "images/snow.png";
+    if (temperature > 34 && solar > 10) return "images/hot.png";
+    if (solar > 100) return "images/clear.png";
+    if (solar > 50) return "images/partly cloudy.png";
+    if (temperature <= 15) return "images/cloud.png";
+    if (solar > 0) return "images/cloudy.png";
+    return "images/mist.png";
+}
+
+function computeStatus(rainRate, uv, temp) {
+    if (rainRate > 0) return text.rainy;
+    if (uv >= 6 && temp >= 26) return text.sunny;
+    if (temp <= 16) return text.cool;
+    return text.stable;
+}
+
+function updateText(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function revealDashboardOnce() {
+    if (hasLoadedOnce) return;
+    document.body.classList.remove("is-loading");
+    document.body.classList.add("is-revealing");
+    hasLoadedOnce = true;
+
+    setTimeout(() => {
+        document.body.classList.remove("is-revealing");
+        document.body.classList.add("is-ready");
+    }, 850);
+}
+
+function applyAtmosphereTheme({ rainRate, solar, temp }) {
+    const nowHour = new Date().getHours();
+    const isNight = solar <= 0 || nowHour >= 19 || nowHour <= 6;
+    let weatherType = "cloudy";
+
+    if (rainRate > 0.1) weatherType = "rain";
+    else if (temp >= 33) weatherType = "hot";
+    else if (solar > 120) weatherType = "clear";
+
+    document.body.dataset.period = isNight ? "night" : "day";
+    document.body.dataset.weather = weatherType;
+}
+
+function updateCurrentWeather() {
+    fetch(API_URL)
+        .then((response) => response.json())
+        .then((json) => {
+            const data = json?.data || {};
+            const temp = Number(getValue(data.outdoor?.temperature));
+            const feelsLike = Number(getValue(data.outdoor?.feels_like));
+            const humidity = Number(getValue(data.outdoor?.humidity));
+            const windSpeed = Number(getValue(data.wind?.wind_speed));
+            const windGust = Number(getValue(data.wind?.wind_gust));
+            const windDirection = Number(getValue(data.wind?.wind_direction));
+            const uv = Number(getValue(data.solar_and_uvi?.uvi));
+            const solar = Number(getValue(data.solar_and_uvi?.solar));
+            const rainRate = Number(getValue(data.rainfall?.rain_rate));
+
+            const icon = document.querySelector(".weather-icon");
+            if (icon) {
+                icon.src = selectWeatherIcon(data);
+            }
+
+            const temperatureNode = document.querySelector(".temperature");
+            if (temperatureNode) {
+                temperatureNode.innerHTML = `${formatNumber(temp)}<span>°C</span>`;
+            }
+
+            const descriptionNode = document.querySelector(".description");
+            if (descriptionNode) {
+                descriptionNode.textContent = `${text.feelsLike}${formatNumber(feelsLike)}°C`;
+            }
+
+            updateText("humidityValue", `${formatNumber(humidity, 0)}%`);
+            updateText("windSpeedValue", `${formatNumber(windSpeed * 3.6)} km/h`);
+            updateText("windGustValue", `${formatNumber(windGust * 3.6)} km/h`);
+            updateText("uvValue", formatNumber(uv, 1));
+            updateText("windDirectionValue", degreesToCompass(windDirection));
+            updateText("rainRateValue", `${formatNumber(rainRate)} mm/h`);
+            updateText("feelsLikeValue", `${formatNumber(feelsLike)}°C`);
+            updateText("weatherStatus", computeStatus(rainRate, uv, temp));
+            updateText("lastUpdated", `${text.updated}${new Date().toLocaleTimeString(isChinese ? "zh-CN" : "en-US")}`);
+            applyAtmosphereTheme({ rainRate, solar, temp });
+            revealDashboardOnce();
+        })
+        .catch(() => {
+            updateText("weatherStatus", text.loadingError);
+            document.body.dataset.weather = "cloudy";
+            revealDashboardOnce();
+        });
+}
+
+updateCurrentWeather();
+setInterval(updateCurrentWeather, 10000);

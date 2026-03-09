@@ -1,127 +1,124 @@
 <!DOCTYPE html>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<html lang="en">
-
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/all.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>SWIS 气象站</title>
-
-   
-        </a>
-    </div>
-    </div>
-   
-    <script src="app.js"></script>
 </head>
-
-<body>
-
-    <div class="container">
-        <div class="search-box">
-            <i class="fa-solid fa-location-dot"></i>
-
-
-                <div class="author">
-                    <div class="language-switcher"> <a href="index.html"> <i class="fa-regular fa-language"></i> </a> </div>
-                <p>SWIS 气象站</p>
-	
-            </div>
-        </div>
-        
-            <canvas id="myChart"></canvas>
-           
-       
-
-
-        <div class="weather-box">
-            <img src="">
-            <p class="temperature"></p>
-            <p class="description"></p>
-            
-  
-            </div>
-
-
-        <div class="weather-details">
-            <div class="humidity">
-                <i class="fa-solid fa-water"></i>
-                <div class="text">
-                    <span></span>
-                    <p>湿度</p>
-                </div>
-            </div>
-            <div class="wind">
-                <i class="fa-solid fa-wind"></i>
-                <div class="text">
-                    <span></span>
-                    <p>风速</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="radiation">
-            <div class="SolarRadiation">
-                <i class="fa-regular fa-sun fa-beat-fade"></i>
-                <div class="text">
-                    <span></span>
-                    <p>太阳辐射</p>
-                </div>
-            </div>
-            <div class="UV">
-                <i class="fa-solid fa-sun-plant-wilt"></i>
-                <div class="text">
-                    <span></span>
-                    <p>紫外线</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="windd">
-            <div class="winddir">
-                <i class="fa-regular fa-windsock fa-shake"></i>
-                <div class="text">
-                    <span></span>
-                    <p>风向</p>
-                </div>
-            </div>
-        
-            <div class="windChill">
-                <i class="fa-regular fa-raindrops fa-beat-fade"></i>
-                <div class="text">
-                    <span></span>
-                    <p>降雨率</p>
-                </div>
-                
-            </div>
-        </div>    
+<body class="is-loading">
+    <div class="atmo" aria-hidden="true">
+        <div class="sky-glow"></div>
+        <div class="sky-stars"></div>
+        <div class="sky-rain"></div>
     </div>
-      
-   
-    
-        
-    </div>
+    <main class="container">
+        <header class="top-bar">
+            <div class="title-wrap">
+                <i class="fa-solid fa-location-dot"></i>
+                <div>
+                    <h1>SWIS 气象站</h1>
+                    <p class="subtitle">由 2024 届 SWIS 校友 Henry Wong 开发，作为其 CS IA 项目</p>
+                </div>
+            </div>
+            <a class="language-switcher" href="index.html" aria-label="切换语言">
+                <i class="fa-regular fa-language"></i>
+            </a>
+        </header>
 
+        <section class="dashboard-grid">
+            <section class="current-weather">
+                <div class="hero">
+                    <div class="hero-orb" aria-hidden="true"></div>
+                    <img class="weather-icon" src="" alt="当前天气图标">
+                    <div class="hero-copy">
+                        <p class="temperature">--<span>°C</span></p>
+                        <p class="description">体感温度 --°C</p>
+                        <p class="status-pill" id="weatherStatus">正在加载最新数据...</p>
+                        <p class="updated-at" id="lastUpdated">更新时间：--</p>
+                    </div>
+                </div>
 
+                <div class="metrics-grid">
+                    <article class="metric-card">
+                        <i class="fa-solid fa-water"></i>
+                        <p class="label">湿度</p>
+                        <p class="value" id="humidityValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-wind"></i>
+                        <p class="label">风速</p>
+                        <p class="value" id="windSpeedValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <p class="label">阵风</p>
+                        <p class="value" id="windGustValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-regular fa-sun"></i>
+                        <p class="label">太阳辐射</p>
+                        <p class="value" id="solarValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-sun-plant-wilt"></i>
+                        <p class="label">紫外线指数</p>
+                        <p class="value" id="uvValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-regular fa-compass"></i>
+                        <p class="label">风向</p>
+                        <p class="value" id="windDirectionValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-regular fa-cloud-rain"></i>
+                        <p class="label">降雨率</p>
+                        <p class="value" id="rainRateValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-temperature-three-quarters"></i>
+                        <p class="label">体感温度</p>
+                        <p class="value" id="feelsLikeValue">--</p>
+                    </article>
+                </div>
+            </section>
 
-       
-        
+            <section class="chart-panel">
+                <div class="chart-header">
+                    <h2 id="chartTitle">未来 7 天预报</h2>
+                    <button id="chartModeToggle" class="chart-mode-toggle" type="button">查看过去 7 天</button>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <article class="insight-card">
+                        <p class="insight-label" id="insightRangeLabel">今日预报温差</p>
+                        <p class="insight-value" id="insightRangeValue">--</p>
+                    </article>
+                    <article class="insight-card">
+                        <p class="insight-label" id="insightRainLabel">未来7天总降雨</p>
+                        <p class="insight-value" id="insightRainValue">--</p>
+                    </article>
+                    <article class="insight-card">
+                        <p class="insight-label" id="insightTrendLabel">趋势信号</p>
+                        <p class="insight-value" id="insightTrendValue">--</p>
+                    </article>
+                </div>
+            </section>
+        </section>
 
+    </main>
+    <aside class="update-note-float" aria-label="项目更新说明">
+        <p class="update-note-title">更新说明</p>
+        <p class="update-note-item"><strong>更新内容：</strong>整体重做了界面风格，让页面更干净、更现代、更简洁，并新增了「过去 7 天 / 未来 7 天预报」切换按钮。</p>
+        <p class="update-note-item"><strong>更新原因：</strong>我想把这个项目当作兴趣持续优化。</p>
+    </aside>
 
-
-        <script src="index.js"></script>
-
+    <script src="index.js"></script>
 </body>
-
-
-</body>
-
 </html>

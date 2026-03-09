@@ -1,88 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
     <link rel="stylesheet" href="css/all.css">
-
     <title>SWIS 气象站</title>
 </head>
-
-<body>
-
-    <div class="container">
-        <div class="search-box">
-            <i class="fa-solid fa-location-dot"></i>
-            <!-- <h3>"SWIS Weather Station"</h3> -->
-            <div class="author">
-				<div class="language-switcher"> <a href="index.html"> <i class="fa-regular fa-language"></i> </a> </div>
-                <p>SWIS 气象站</p>
-            </div>
-        </div>
-
-        <!-- <div class="not-found">
-            <img src="images/404.png">
-            <p>Oops! Invalid location :/</p>
-        </div> -->
-
-        <div class="weather-box">
-            <img src="">
-            <p class="temperature"></p>
-            <p class="description"></p>
-        </div>
-
-        <div class="weather-details">
-            <div class="humidity">
-                <i class="fa-solid fa-water"></i>
-                <div class="text">
-                    <span></span>
-                    <p>湿度</p>
-                </div>
-            </div>
-            <div class="wind">
-                <i class="fa-solid fa-wind"></i>
-                <div class="text">
-                    <span></span>
-                    <p>风速</p>
-                </div>
-            </div>
-        </div>
-
+<body class="is-loading">
+    <div class="atmo" aria-hidden="true">
+        <div class="sky-glow"></div>
     </div>
-
-    
-
-        <!-- <div class="container">
-            <div class="header">
-                <h1>Weather App</h1>
-            </div>
-            <div class="weather-box">
-                <img src="" alt="Weather icon">
-                <div class="temperature"></div>
-                <div class="description"></div>
-            </div>
-            <div class="weather-details">
-                <div class="humidity">
-                    <span></span>
-                    <span>Humidity</span>
-                </div>
-                <div class="wind">
-                    <span></span>
-                    <span>Wind</span>
+    <main class="container">
+        <header class="top-bar">
+            <div class="title-wrap">
+                <i class="fa-solid fa-location-dot"></i>
+                <div>
+                    <h1>SWIS 气象站</h1>
+                    <p class="subtitle">由 2024 届 SWIS 校友 Henry Wong 开发，作为其 CS IA 项目</p>
                 </div>
             </div>
-        </div> -->
-    
-       
-      
-        <script src="index.js"></script>
+            <a class="language-switcher" href="index.html" aria-label="切换语言">
+                <i class="fa-regular fa-language"></i>
+            </a>
+        </header>
+
+        <section class="hero">
+            <div class="hero-orb" aria-hidden="true"></div>
+            <img class="weather-icon" src="" alt="当前天气图标">
+            <p class="temperature">--<span>°C</span></p>
+            <p class="description">体感温度 --°C</p>
+            <p class="status-pill" id="weatherStatus">正在加载最新数据...</p>
+            <p class="updated-at" id="lastUpdated">更新时间：--</p>
+        </section>
+
+        <section class="metrics-grid">
+            <article class="metric-card">
+                <i class="fa-solid fa-water"></i>
+                <p class="label">湿度</p>
+                <p class="value" id="humidityValue">--</p>
+            </article>
+            <article class="metric-card">
+                <i class="fa-solid fa-wind"></i>
+                <p class="label">风速</p>
+                <p class="value" id="windSpeedValue">--</p>
+            </article>
+            <article class="metric-card">
+                <i class="fa-solid fa-gauge-high"></i>
+                <p class="label">阵风</p>
+                <p class="value" id="windGustValue">--</p>
+            </article>
+            <article class="metric-card">
+                <i class="fa-solid fa-sun-plant-wilt"></i>
+                <p class="label">紫外线指数</p>
+                <p class="value" id="uvValue">--</p>
+            </article>
+            <article class="metric-card">
+                <i class="fa-regular fa-compass"></i>
+                <p class="label">风向</p>
+                <p class="value" id="windDirectionValue">--</p>
+            </article>
+            <article class="metric-card">
+                <i class="fa-regular fa-cloud-rain"></i>
+                <p class="label">降雨率</p>
+                <p class="value" id="rainRateValue">--</p>
+            </article>
+            <article class="metric-card metric-wide">
+                <i class="fa-solid fa-temperature-three-quarters"></i>
+                <p class="label">体感温度</p>
+                <p class="value" id="feelsLikeValue">--</p>
+            </article>
+        </section>
+    </main>
+
+    <script src="index.js"></script>
 </body>
-
 </html>

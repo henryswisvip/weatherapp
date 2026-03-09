@@ -1,151 +1,124 @@
 <!DOCTYPE html>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<p id="usageResponse"></p>
-
 <html lang="en">
-
 <head>
-  
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/all.css">
-    <title>SWIS weather Station</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>SWIS Weather Station</title>
 </head>
-<script>
-    const languageSwitcher = document.getElementById('language-switcher');
-    const currentUrl = window.location.href;
-    const isChinese = currentUrl.includes('index_cn.html');
-  
-    if (isChinese) {
-      languageSwitcher.href = currentUrl.replace('index_cn.html', 'index.html');
-    } else {
-      languageSwitcher.href = currentUrl.replace('index.html', 'index_cn.html');
-    }
-  </script>
-<body>
-      <form id="usageForm" action="https://docs.google.com/forms/d/e/1FAIpQLSePN4HR_fgc3Jo03KbezsoCcnHLuY9Hp15Wtnl_S5YpEZTH5A/formResponse" method="POST" target="hidden_iframe">
-        <!-- Pre-filled "Yes" value for the 'used' field -->
-        <input type="hidden" name="entry.1234567890" id="usedField" value="Yes" />
-        <input type="hidden" name="entry.9876543210" id="timestampField" />
-    </form>
-    <button id="usageButton">Is anyone still using this website?</button>
-    <p id="usageResponse"></p>
-    <iframe name="hidden_iframe" style="display: none;"></iframe>
-    
-    <div id="feedbackOverlay" class="hidden">
-        <p id="feedbackMessage">Thanks for letting us know!</p>
+<body class="is-loading">
+    <div class="atmo" aria-hidden="true">
+        <div class="sky-glow"></div>
+        <div class="sky-stars"></div>
+        <div class="sky-rain"></div>
     </div>
-    
-  
-</div>
-    <script src="app.js"></script>
-    
-   
-    <div class="container">
-        <div class="search-box">
-            <i class="fa-solid fa-location-dot"></i>
-
-            <div class="author">
-                <div class="language-switcher"> <a href="index_cn.html"> <i class="fa-regular fa-language"></i> </a> </div>
-                <p>SWIS Weather Station</p>
-                
-	
-            </div>
-        </div>
-        
-            <canvas id="myChart"></canvas>
-           
-       
-
-
-        <div class="weather-box">
-            <img src="">
-            <p class="temperature"></p>
-            <p class="description"></p>
-
-  
-            </div>
-
-
-        <div class="weather-details">
-            <div class="humidity">
-                <i class="fa-solid fa-water"></i>
-                <div class="text">
-                    <span></span>
-                    <p>Humidity</p>
+    <main class="container">
+        <header class="top-bar">
+            <div class="title-wrap">
+                <i class="fa-solid fa-location-dot"></i>
+                <div>
+                    <h1>SWIS Weather Station</h1>
+                    <p class="subtitle">Developed by Henry Wong, a 2024 SWIS Alumni, as his CS IA</p>
                 </div>
             </div>
-            <div class="wind">
-                <i class="fa-solid fa-wind"></i>
-                <div class="text">
-                    <span></span>
-                    <p>Wind Speed</p>
+            <a class="language-switcher" href="index_cn.html" aria-label="Switch language">
+                <i class="fa-regular fa-language"></i>
+            </a>
+        </header>
+
+        <section class="dashboard-grid">
+            <section class="current-weather">
+                <div class="hero">
+                    <div class="hero-orb" aria-hidden="true"></div>
+                    <img class="weather-icon" src="" alt="Current weather icon">
+                    <div class="hero-copy">
+                        <p class="temperature">--<span>°C</span></p>
+                        <p class="description">Feels like --°C</p>
+                        <p class="status-pill" id="weatherStatus">Loading latest data...</p>
+                        <p class="updated-at" id="lastUpdated">Last updated: --</p>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="radiation">
-            <div class="SolarRadiation">
-                <i class="fa-regular fa-sun fa-beat-fade"></i>
-                <div class="text">
-                    <span></span>
-                    <p>SolarRadiation</p>
+
+                <div class="metrics-grid">
+                    <article class="metric-card">
+                        <i class="fa-solid fa-water"></i>
+                        <p class="label">Humidity</p>
+                        <p class="value" id="humidityValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-wind"></i>
+                        <p class="label">Wind Speed</p>
+                        <p class="value" id="windSpeedValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <p class="label">Wind Gust</p>
+                        <p class="value" id="windGustValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-regular fa-sun"></i>
+                        <p class="label">Solar Radiation</p>
+                        <p class="value" id="solarValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-sun-plant-wilt"></i>
+                        <p class="label">UV Index</p>
+                        <p class="value" id="uvValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-regular fa-compass"></i>
+                        <p class="label">Wind Direction</p>
+                        <p class="value" id="windDirectionValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-regular fa-cloud-rain"></i>
+                        <p class="label">Rain Rate</p>
+                        <p class="value" id="rainRateValue">--</p>
+                    </article>
+                    <article class="metric-card">
+                        <i class="fa-solid fa-temperature-three-quarters"></i>
+                        <p class="label">Feels Like</p>
+                        <p class="value" id="feelsLikeValue">--</p>
+                    </article>
                 </div>
-            </div>
-            <div class="UV">
-                <i class="fa-solid fa-sun-plant-wilt"></i>
-                <div class="text">
-                    <span></span>
-                    <p>UV</p>
+            </section>
+
+            <section class="chart-panel">
+                <div class="chart-header">
+                    <h2 id="chartTitle">7-Day Forecast</h2>
+                    <button id="chartModeToggle" class="chart-mode-toggle" type="button">Show Last 7 Days</button>
                 </div>
-            </div>
-        </div>
-
-        <div class="windd">
-            <div class="winddir">
-                <i class="fa-regular fa-windsock fa-shake"></i>
-                <div class="text">
-                    <span></span>
-                    <p>winddir</p>
+                <div class="chart-canvas-wrap">
+                    <canvas id="myChart"></canvas>
                 </div>
-            </div>
-        
-            <div class="windChill">
-                <i class="fa-regular fa-raindrops fa-beat-fade"></i>
-                <div class="text">
-                    <span></span>
-                    <p>Precipitation Rate</p>
+                <div class="chart-insights">
+                    <article class="insight-card">
+                        <p class="insight-label" id="insightRangeLabel">Today's Forecast Range</p>
+                        <p class="insight-value" id="insightRangeValue">--</p>
+                    </article>
+                    <article class="insight-card">
+                        <p class="insight-label" id="insightRainLabel">Next 7-Day Rain</p>
+                        <p class="insight-value" id="insightRainValue">--</p>
+                    </article>
+                    <article class="insight-card">
+                        <p class="insight-label" id="insightTrendLabel">Trend Signal</p>
+                        <p class="insight-value" id="insightTrendValue">--</p>
+                    </article>
                 </div>
-                
-            </div>
-        </div>    
-    </div>
-      
-   
-    
-        
-    </div>
+            </section>
+        </section>
 
+    </main>
+    <aside class="update-note-float" aria-label="Project update note">
+        <p class="update-note-title">Update Note</p>
+        <p class="update-note-item"><strong>Updated:</strong> Fully redesigned the UI to be cleaner, more modern, and more simplistic, and added a toggle between past 7 days and 7-day forecast.</p>
+        <p class="update-note-item"><strong>Why:</strong> I wanted to keep improving this project for fun.</p>
+    </aside>
 
-
-       
-        
-
-
-
-        <script src="index.js"></script>
-
+    <script src="index.js"></script>
 </body>
-
-
-<script src="app.js"></script>
-</body>
-
 </html>
