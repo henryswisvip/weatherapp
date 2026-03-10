@@ -155,32 +155,32 @@ function runAiAdviceFetch(askForDifferent) {
 
     const trendDelta = Number(latestChartSnapshot.highs.at(-1)) - Number(latestChartSnapshot.highs[0]);
     let prompt = isChinese
-        ? `你是天气助手。请只输出一句简短建议（不超过30字，不要项目符号，不要表情）。地点深圳。当前温度${formatNumber(latestCurrentSnapshot.temp)}度，紫外线${formatNumber(latestCurrentSnapshot.uv)}，降雨率${formatNumber(latestCurrentSnapshot.rainRate)}毫米每小时。今日最高${formatNumber(latestCurrentSnapshot.todayHigh)}度，最低${formatNumber(latestCurrentSnapshot.todayLow)}度，今日降雨${formatNumber(latestCurrentSnapshot.todayRain)}毫米。温度趋势变化${formatNumber(trendDelta)}度。给出穿衣或活动建议。`
-        : `You are a weather assistant. Output exactly one short advice sentence under 20 words, no emoji, no bullets. Location Shenzhen. Current temp ${formatNumber(latestCurrentSnapshot.temp)}C, UV ${formatNumber(latestCurrentSnapshot.uv)}, rain rate ${formatNumber(latestCurrentSnapshot.rainRate)} mm/h. Today's high ${formatNumber(latestCurrentSnapshot.todayHigh)}C, low ${formatNumber(latestCurrentSnapshot.todayLow)}C, today's rain ${formatNumber(latestCurrentSnapshot.todayRain)} mm. Temperature trend delta ${formatNumber(trendDelta)}C. Give practical clothing or activity advice.`;
+        ? `地点深圳。当前${formatNumber(latestCurrentSnapshot.temp)}度，紫外线${formatNumber(latestCurrentSnapshot.uv)}，降雨${formatNumber(latestCurrentSnapshot.rainRate)}毫米/时。今日最高${formatNumber(latestCurrentSnapshot.todayHigh)}度、最低${formatNumber(latestCurrentSnapshot.todayLow)}度，降雨${formatNumber(latestCurrentSnapshot.todayRain)}毫米，温度趋势${formatNumber(trendDelta)}度。请根据这些数据给一句温暖、有情绪、让人开心的建议，可以带一点小表情。`
+        : `Location Shenzhen. Current ${formatNumber(latestCurrentSnapshot.temp)}°C, UV ${formatNumber(latestCurrentSnapshot.uv)}, rain ${formatNumber(latestCurrentSnapshot.rainRate)} mm/h. Today's high ${formatNumber(latestCurrentSnapshot.todayHigh)}°C, low ${formatNumber(latestCurrentSnapshot.todayLow)}°C, rain ${formatNumber(latestCurrentSnapshot.todayRain)} mm, trend ${formatNumber(trendDelta)}°C. Give one warm, emotional, delightful piece of advice—you may use a few emojis.`;
 
     let systemContent = isChinese
-        ? "你是天气生活助手。只输出一句简短、实用、自然的建议，不要表情和项目符号。"
-        : "You are a weather lifestyle assistant. Output exactly one short practical sentence only. No emoji or bullet points.";
+        ? "你是贴心又活泼的天气小助手。用一句简短、有温度、带点情绪的话给出建议，让人看了心情好。可以用 1～2 个合适的小表情（emoji）。不要列点，只要一句。"
+        : "You are a warm, cheerful weather buddy. Reply with one short, delightful sentence that feels emotional and uplifting. You may use 1–2 emojis if they fit. No bullet points—just one friendly line.";
 
     if (askForDifferent) {
         const nonce = Math.random().toString(36).slice(2, 8);
         prompt += " [ref:" + nonce + "]";
         const varyEn = [
-            "This time your sentence must be about what to wear or what layers to use.",
-            "This time your sentence must be about the best time of day to go out or stay in.",
-            "This time your sentence must be about drinking water or sun protection.",
-            "This time your sentence must be about indoor versus outdoor plans.",
-            "This time your sentence must be about feeling comfortable (cool or warm)."
+            "This time focus your vibe on what to wear or layers.",
+            "This time focus on the best time to go out or cozy up.",
+            "This time focus on staying hydrated or sun-safe.",
+            "This time focus on indoor vs outdoor plans.",
+            "This time focus on staying comfy (cool or warm)."
         ];
         const varyZh = [
-            "这次必须从穿什么、穿几件给建议。",
-            "这次必须从什么时候出门、什么时候在家给建议。",
-            "这次必须从喝水或防晒给建议。",
-            "这次必须从室内还是室外安排给建议。",
-            "这次必须从体感凉热、舒适度给建议。"
+            "这次从穿什么、穿几件来给建议。",
+            "这次从出门时段或宅家来给建议。",
+            "这次从补水或防晒来给建议。",
+            "这次从室内外安排来给建议。",
+            "这次从体感凉热、舒适度来给建议。"
         ];
         const vary = isChinese ? varyZh[Math.floor(Math.random() * varyZh.length)] : varyEn[Math.floor(Math.random() * varyEn.length)];
-        systemContent = (isChinese ? "你是天气生活助手。只输出一句简短建议，不要表情和项目符号。" : "You are a weather lifestyle assistant. Output exactly one short sentence only. No emoji or bullet points.") + " " + vary;
+        systemContent = (isChinese ? "你是贴心又活泼的天气小助手。用一句简短、有温度的话给建议，可带 1～2 个小表情。" : "You are a warm, cheerful weather buddy. One short, delightful sentence; 1–2 emojis okay.") + " " + vary;
     }
 
     const refreshBtn = document.getElementById("aiAdviceRefresh");
