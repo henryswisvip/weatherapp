@@ -1,6 +1,6 @@
 const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
-const AQI_URL = "https://air-quality.api.open-meteo.com/v1/air-quality?latitude=22.50&longitude=113.93&hourly=us_aqi&forecast_days=1";
+const AQI_URL = "https://api.waqi.info/feed/geo:22.50;113.93/?token=07317feebc1c052659543d41c332e57d2d61a5a6";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "groq/compound";
@@ -457,13 +457,7 @@ function fetchAqi() {
     fetch(AQI_URL)
         .then((response) => response.json())
         .then((data) => {
-            let aqi = null;
-            if (data?.current?.us_aqi != null) {
-                aqi = data.current.us_aqi;
-            }
-            if (aqi == null && data?.hourly?.us_aqi?.length) {
-                aqi = data.hourly.us_aqi[0];
-            }
+            const aqi = data?.status === "ok" ? data?.data?.aqi : null;
             const card = document.getElementById("aqiCard");
             if (card) {
                 card.classList.remove("aqi-good", "aqi-moderate", "aqi-unhealthy-sensitivity", "aqi-unhealthy", "aqi-very-unhealthy", "aqi-hazardous");
