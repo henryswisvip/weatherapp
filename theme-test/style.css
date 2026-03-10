@@ -152,23 +152,25 @@ h1 {
     font-size: 0.87rem;
 }
 
-.language-switcher {
+.theme-nav {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    gap: 0.5rem;
+    padding: 0.35rem 0.65rem;
+    background: rgba(223, 246, 255, 0.8);
+    color: #0a4b6d;
     border-radius: 999px;
-    border: 1px solid #d2e7f3;
-    color: #0f4c75;
-    font-size: 1.15rem;
+    font-size: 0.85rem;
+    font-weight: 600;
     text-decoration: none;
+    border: 1px solid #d2e7f3;
     transition: all 0.2s ease;
 }
 
-.language-switcher:hover {
+.theme-nav:hover {
     background: #0f4c75;
-    color: #ffffff;
+    color: #fff;
+    border-color: #0f4c75;
 }
 
 .dashboard-grid {
@@ -223,20 +225,6 @@ h1 {
     z-index: 1;
 }
 
-.weather-icon-fallback {
-    width: 98px;
-    height: 98px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3.5rem;
-    color: var(--accent);
-    filter: drop-shadow(0 6px 12px rgba(23, 92, 136, 0.24));
-    animation: bob 3.8s ease-in-out infinite;
-    position: relative;
-    z-index: 1;
-}
-
 .temperature {
     font-size: 3.2rem;
     font-weight: 900;
@@ -267,10 +255,6 @@ h1 {
     font-weight: 600;
 }
 
-.is-loading .status-pill {
-    animation: loadingPulse 1.15s ease-in-out infinite;
-}
-
 .updated-at {
     margin-top: 0.45rem;
     color: #6a7782;
@@ -292,11 +276,6 @@ h1 {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.metric-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(15, 76, 117, 0.09);
-}
-
 .metric-card i {
     color: var(--accent);
     font-size: 0.95rem;
@@ -314,220 +293,28 @@ h1 {
     font-weight: 800;
 }
 
-.metric-card.is-alert {
-    border-color: rgba(255, 123, 0, 0.45);
-    box-shadow: 0 8px 18px rgba(255, 123, 0, 0.18);
-}
-
-.metric-card.is-alert .value {
-    color: #b35500;
-}
-
-.metric-card.aqi-good { border-color: rgba(0, 163, 138, 0.35); }
-.metric-card.aqi-good .value { color: #007a67; }
-.metric-card.aqi-moderate { border-color: rgba(255, 193, 7, 0.45); }
-.metric-card.aqi-moderate .value { color: #b38600; }
-.metric-card.aqi-unhealthy-sensitivity,
-.metric-card.aqi-unhealthy { border-color: rgba(255, 123, 0, 0.45); }
-.metric-card.aqi-unhealthy-sensitivity .value,
-.metric-card.aqi-unhealthy .value { color: #b35500; }
-.metric-card.aqi-very-unhealthy,
-.metric-card.aqi-hazardous { border-color: rgba(220, 53, 69, 0.4); }
-.metric-card.aqi-very-unhealthy .value,
-.metric-card.aqi-hazardous .value { color: #a71d2a; }
-
-.chart-panel {
-    background: #ffffff;
-    border: 1px solid #e4edf5;
-    border-radius: 16px;
-    padding: 1rem 1rem 1rem;
-    box-shadow: 0 5px 14px rgba(15, 76, 117, 0.05);
-    display: flex;
-    flex-direction: column;
-}
-
-.chart-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.65rem;
-}
-
-.chart-mode-toggle {
-    border: 1px solid #cfe2ef;
-    background: #f6fbff;
-    color: #0f4c75;
-    border-radius: 999px;
-    padding: 0.35rem 0.75rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.chart-mode-toggle:hover {
-    background: #0f4c75;
-    color: #ffffff;
-    border-color: #0f4c75;
-}
-
-.is-loading .hero,
-.is-loading .metric-card,
-.is-loading .chart-panel {
-    opacity: 0;
-    transform: translateY(10px) scale(0.985);
-}
-
-.is-revealing .hero,
-.is-revealing .metric-card,
-.is-revealing .chart-panel {
-    animation: panelIn 0.5s ease forwards;
-}
-
-.is-revealing .metric-card:nth-child(1) { animation-delay: 0.06s; }
-.is-revealing .metric-card:nth-child(2) { animation-delay: 0.1s; }
-.is-revealing .metric-card:nth-child(3) { animation-delay: 0.14s; }
-.is-revealing .metric-card:nth-child(4) { animation-delay: 0.18s; }
-.is-revealing .metric-card:nth-child(5) { animation-delay: 0.22s; }
-.is-revealing .metric-card:nth-child(6) { animation-delay: 0.26s; }
-.is-revealing .metric-card:nth-child(7) { animation-delay: 0.3s; }
-.is-revealing .metric-card:nth-child(8) { animation-delay: 0.34s; }
-.is-revealing .metric-card:nth-child(9) { animation-delay: 0.38s; }
-
-.is-revealing .chart-panel { animation-delay: 0.18s; }
-
-.chart-panel h2 {
-    font-family: "Poppins", sans-serif;
-    font-size: 1rem;
-    margin-bottom: 0;
-}
-
-#myChart {
-    width: 100%;
-    height: 100% !important;
-}
-
-.chart-canvas-wrap {
-    position: relative;
-    height: 300px;
-    width: 100%;
-}
-
-.chart-insights {
-    margin-top: 0.75rem;
+.theme-list {
+    list-style: none;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.55rem;
+    gap: 0.6rem;
 }
 
-.insight-card {
-    border: 1px solid #e4edf5;
-    border-radius: 11px;
+.theme-list a {
+    display: block;
+    padding: 0.75rem 1rem;
     background: #f9fcff;
-    padding: 0.55rem 0.6rem;
-}
-
-.insight-label {
-    font-size: 0.74rem;
-    color: #6a7782;
-}
-
-.insight-value {
-    margin-top: 0.18rem;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: #17384d;
-}
-
-.ai-advice-card {
-    margin-top: 0.75rem;
-    border: 1px solid #dbe7f0;
+    border: 1px solid #e4edf5;
     border-radius: 12px;
-    background: linear-gradient(160deg, #f8fcff, #f1f8ff);
-    padding: 0.7rem 0.75rem;
-}
-
-.ai-advice-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.ai-advice-title {
-    font-family: "Poppins", sans-serif;
-    font-size: 0.82rem;
-    font-weight: 700;
     color: #0f4c75;
-}
-
-.ai-advice-refresh {
-    border: 1px solid #cfe2ef;
-    background: #f6fbff;
-    color: #0f4c75;
-    border-radius: 999px;
-    padding: 0.28rem 0.6rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
     transition: all 0.2s ease;
 }
 
-.ai-advice-refresh:hover {
+.theme-list a:hover {
     background: #0f4c75;
     color: #fff;
     border-color: #0f4c75;
-}
-
-.ai-advice-refresh:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.ai-advice-text {
-    margin-top: 0.32rem;
-    font-size: 0.84rem;
-    line-height: 1.45;
-    color: #2f4b5e;
-}
-
-.update-note-float {
-    position: fixed;
-    bottom: 1.3rem;
-    right: 1.25rem;
-    z-index: 3;
-    width: min(320px, calc(100vw - 2rem));
-    border: 1px solid #dbe7f0;
-    border-left: 4px solid #0f4c75;
-    border-radius: 12px;
-    background: rgba(248, 252, 255, 0.96);
-    backdrop-filter: blur(6px);
-    padding: 0.7rem 0.8rem;
-    box-shadow: 0 8px 22px rgba(15, 76, 117, 0.16);
-}
-
-.update-note-title {
-    font-family: "Poppins", sans-serif;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: #0f4c75;
-    margin-bottom: 0.45rem;
-}
-
-.update-note-item {
-    font-size: 0.8rem;
-    color: #355163;
-    line-height: 1.45;
-}
-
-.update-note-item + .update-note-item {
-    margin-top: 0.38rem;
-}
-
-.hidden {
-    display: none !important;
 }
 
 body[data-period="night"] .sky-stars {
@@ -540,57 +327,6 @@ body[data-weather="rain"] .sky-rain {
 
 body[data-weather="rain"] .sky-glow {
     opacity: 0.35;
-}
-
-@media (max-width: 860px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .metrics-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .hero {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    #myChart {
-        height: 100% !important;
-    }
-
-    .chart-canvas-wrap {
-        height: 220px;
-    }
-
-    .chart-insights {
-        grid-template-columns: 1fr;
-    }
-
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .update-note-float {
-        position: static;
-        width: 100%;
-        margin-top: 0.8rem;
-        box-shadow: 0 5px 14px rgba(15, 76, 117, 0.05);
-    }
-}
-
-@keyframes loadingPulse {
-    0%, 100% { opacity: 0.55; }
-    50% { opacity: 1; }
-}
-
-@keyframes panelIn {
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
 }
 
 @keyframes glowDrift {
@@ -611,4 +347,17 @@ body[data-weather="rain"] .sky-glow {
 @keyframes bob {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-5px); }
+}
+
+@media (max-width: 860px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .hero {
+        flex-direction: column;
+        text-align: center;
+    }
 }

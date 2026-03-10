@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Theme test – SWIS Weather</title>
+</head>
+<body data-weather="cloudy">
+    <div class="atmo" aria-hidden="true">
+        <div class="sky-glow"></div>
+        <div class="sky-stars"></div>
+        <div class="sky-rain"></div>
+    </div>
+    <main class="container">
+        <header class="top-bar">
+            <div class="title-wrap">
+                <i class="fa-solid fa-palette"></i>
+                <div>
+                    <h1>Theme test</h1>
+                    <p class="subtitle">Click a situation below to see how the site looks in different weather and time of day.</p>
+                </div>
+            </div>
+        </header>
+        <section style="padding: 0.5rem 0;">
+            <ul class="theme-list">
+                <li><a href="cloudy-day.html">Cloudy (day)</a></li>
+                <li><a href="clear-day.html">Clear / sunny (day)</a></li>
+                <li><a href="rain-day.html">Rain (day) – animated rain</a></li>
+                <li><a href="hot-day.html">Hot (day)</a></li>
+                <li><a href="night.html">Night – stars</a></li>
+                <li><a href="rain-night.html">Rain + night – rain + stars</a></li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

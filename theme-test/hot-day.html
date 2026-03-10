@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Hot (day) – Theme test</title>
+</head>
+<body data-weather="hot">
+    <div class="atmo" aria-hidden="true">
+        <div class="sky-glow"></div>
+        <div class="sky-stars"></div>
+        <div class="sky-rain"></div>
+    </div>
+    <main class="container">
+        <header class="top-bar">
+            <div class="title-wrap">
+                <i class="fa-solid fa-temperature-high"></i>
+                <div>
+                    <h1>Hot (day)</h1>
+                    <p class="subtitle">Orange/red gradient, warm accent – for high temps.</p>
+                </div>
+            </div>
+            <a class="theme-nav" href="index.html"><i class="fa-solid fa-arrow-left"></i> All themes</a>
+        </header>
+        <section class="dashboard-grid">
+            <section class="current-weather">
+                <div class="hero">
+                    <div class="hero-orb" aria-hidden="true"></div>
+                    <img class="weather-icon" src="../ComputerTabletsInterface/images/hot.png" alt="Hot" onerror="this.style.display='none'">
+                    <div class="hero-copy">
+                        <p class="temperature">36<span>°C</span></p>
+                        <p class="description">Feels like 38°C</p>
+                        <p class="status-pill">Sunny and warm</p>
+                        <p class="updated-at">Theme demo – no live data</p>
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <article class="metric-card"><i class="fa-solid fa-sun-plant-wilt"></i><p class="label">UV Index</p><p class="value">10</p></article>
+                    <article class="metric-card"><i class="fa-solid fa-temperature-three-quarters"></i><p class="label">Feels Like</p><p class="value">38°C</p></article>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+</html>

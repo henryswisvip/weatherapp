@@ -1,5 +1,6 @@
 const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
+const AQI_URL = "https://air-quality.api.open-meteo.com/v1/air-quality?latitude=22.50&longitude=113.93&hourly=us_aqi&forecast_days=1";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "groq/compound";
@@ -34,7 +35,8 @@ const units = {
     adviceRefreshButton: isChinese ? "换一句建议" : "Refresh advice",
     adviceError: isChinese ? "无法获取新建议，请稍后再试。" : "Couldn't load new advice. Try again later.",
     historyUnavailable: isChinese ? "历史数据暂不可用" : "History data currently unavailable",
-    forecastUnavailable: isChinese ? "预报数据暂不可用" : "Forecast data currently unavailable"
+    forecastUnavailable: isChinese ? "预报数据暂不可用" : "Forecast data currently unavailable",
+    aqiLabel: isChinese ? "空气质量 (深圳)" : "Air Quality (Shenzhen)"
 };
 
 let trendChart = null;
@@ -96,8 +98,8 @@ function selectWeatherIcon(data) {
     if (temperature < 11) return "images/snow.png";
     if (temperature > 34 && solar > 10) return "images/hot.png";
     if (solar > 100) return "images/clear.png";
-    if (solar > 50) return "images/partly cloudy.png";
-    if (temperature <= 15) return "images/cloud.png";
+    if (solar > 85) return "images/partly cloudy.png";
+    if (solar <= 85 && temperature <= 18) return "images/cloud.png";
     if (solar > 0) return "images/cloudy.png";
     return "images/mist.png";
 }
@@ -267,6 +269,8 @@ function updateChartMetaText() {
     updateText("insightRangeLabel", chartMode === "forecast" ? units.insightRangeForecast : units.insightRangeHistory);
     updateText("insightRainLabel", chartMode === "forecast" ? units.insightRainForecast : units.insightRainHistory);
     updateText("insightTrendLabel", units.insightTrendLabel);
+    const aqiLabelEl = document.getElementById("aqiLabel");
+    if (aqiLabelEl) updateText("aqiLabel", units.aqiLabel);
 
     const toggle = document.getElementById("chartModeToggle");
     if (toggle) {
@@ -438,6 +442,41 @@ function applyAtmosphereTheme({ rainRate, solar, temp }) {
     document.body.dataset.weather = weatherType;
 }
 
+function getAqiLevel(aqi) {
+    const n = Number(aqi);
+    if (!Number.isFinite(n)) return null;
+    if (n <= 50) return "good";
+    if (n <= 100) return "moderate";
+    if (n <= 150) return "unhealthy-sensitivity";
+    if (n <= 200) return "unhealthy";
+    if (n <= 300) return "very-unhealthy";
+    return "hazardous";
+}
+
+function fetchAqi() {
+    fetch(AQI_URL)
+        .then((response) => response.json())
+        .then((data) => {
+            let aqi = null;
+            if (data?.current?.us_aqi != null) {
+                aqi = data.current.us_aqi;
+            }
+            if (aqi == null && data?.hourly?.us_aqi?.length) {
+                aqi = data.hourly.us_aqi[0];
+            }
+            const card = document.getElementById("aqiCard");
+            if (card) {
+                card.classList.remove("aqi-good", "aqi-moderate", "aqi-unhealthy-sensitivity", "aqi-unhealthy", "aqi-very-unhealthy", "aqi-hazardous");
+                const level = getAqiLevel(aqi);
+                if (level) card.classList.add("aqi-" + level);
+            }
+            updateText("aqiValue", Number.isFinite(Number(aqi)) ? String(Math.round(Number(aqi))) : "--");
+        })
+        .catch(() => {
+            updateText("aqiValue", "--");
+        });
+}
+
 function updateCurrentWeather() {
     fetch(API_URL)
         .then((response) => response.json())
@@ -459,6 +498,15 @@ function updateCurrentWeather() {
             const descriptionNode = document.querySelector(".description");
 
             if (icon) {
+                const fallback = document.querySelector(".weather-icon-fallback");
+                icon.onerror = () => {
+                    icon.style.display = "none";
+                    if (fallback) fallback.style.display = "";
+                };
+                icon.onload = () => {
+                    icon.style.display = "";
+                    if (fallback) fallback.style.display = "none";
+                };
                 icon.src = selectWeatherIcon(data);
             }
 
@@ -756,5 +804,7 @@ setupChartModeToggle();
 setupAdviceRefreshButton();
 updateCurrentWeather();
 loadChartModeData();
+fetchAqi();
 setInterval(updateCurrentWeather, 10000);
 setInterval(refreshCurrentChartModeData, 6 * 60 * 60 * 1000);
+setInterval(fetchAqi, 30 * 60 * 1000);

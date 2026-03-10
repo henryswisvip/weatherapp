@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Rain + night – Theme test</title>
+</head>
+<body data-weather="rain" data-period="night">
+    <div class="atmo" aria-hidden="true">
+        <div class="sky-glow"></div>
+        <div class="sky-stars"></div>
+        <div class="sky-rain"></div>
+    </div>
+    <main class="container">
+        <header class="top-bar">
+            <div class="title-wrap">
+                <i class="fa-solid fa-cloud-moon-rain"></i>
+                <div>
+                    <h1>Rain + night</h1>
+                    <p class="subtitle">Night colors + stars + animated rain layer.</p>
+                </div>
+            </div>
+            <a class="theme-nav" href="index.html"><i class="fa-solid fa-arrow-left"></i> All themes</a>
+        </header>
+        <section class="dashboard-grid">
+            <section class="current-weather">
+                <div class="hero">
+                    <div class="hero-orb" aria-hidden="true"></div>
+                    <img class="weather-icon" src="../ComputerTabletsInterface/images/rain.png" alt="Rain" onerror="this.style.display='none'">
+                    <div class="hero-copy">
+                        <p class="temperature">20<span>°C</span></p>
+                        <p class="description">Feels like 19°C</p>
+                        <p class="status-pill">Rain right now</p>
+                        <p class="updated-at">Theme demo – no live data</p>
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <article class="metric-card"><i class="fa-regular fa-cloud-rain"></i><p class="label">Rain Rate</p><p class="value">2.1 mm/h</p></article>
+                    <article class="metric-card"><i class="fa-solid fa-water"></i><p class="label">Humidity</p><p class="value">88%</p></article>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+</html>

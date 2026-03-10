@@ -35,6 +35,7 @@
                 <div class="hero">
                     <div class="hero-orb" aria-hidden="true"></div>
                     <img class="weather-icon" src="" alt="当前天气图标">
+                    <span class="weather-icon-fallback" aria-hidden="true" style="display: none;"><i class="fa-solid fa-cloud"></i></span>
                     <div class="hero-copy">
                         <p class="temperature">--<span>°C</span></p>
                         <p class="description">体感温度 --°C</p>
@@ -83,6 +84,11 @@
                         <i class="fa-solid fa-temperature-three-quarters"></i>
                         <p class="label">体感温度</p>
                         <p class="value" id="feelsLikeValue">--</p>
+                    </article>
+                    <article class="metric-card" id="aqiCard">
+                        <i class="fa-solid fa-smog"></i>
+                        <p class="label" id="aqiLabel">空气质量 (深圳)</p>
+                        <p class="value" id="aqiValue">--</p>
                     </article>
                 </div>
             </section>
