@@ -412,6 +412,59 @@ h1 {
     color: #17384d;
 }
 
+.ai-advice-card {
+    margin-top: 0.75rem;
+    border: 1px solid #dbe7f0;
+    border-radius: 12px;
+    background: linear-gradient(160deg, #f8fcff, #f1f8ff);
+    padding: 0.7rem 0.75rem;
+}
+
+.ai-advice-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ai-advice-title {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f4c75;
+}
+
+.ai-advice-refresh {
+    border: 1px solid #cfe2ef;
+    background: #f6fbff;
+    color: #0f4c75;
+    border-radius: 999px;
+    padding: 0.28rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ai-advice-refresh:hover {
+    background: #0f4c75;
+    color: #fff;
+    border-color: #0f4c75;
+}
+
+.ai-advice-refresh:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ai-advice-text {
+    margin-top: 0.32rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: #2f4b5e;
+}
+
 .update-note-float {
     position: fixed;
     bottom: 1.3rem;

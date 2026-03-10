@@ -1,6 +1,12 @@
 const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "openai/gpt-oss-120b";
+const GROQ_API_KEY = (typeof window !== "undefined" && (window.GROQ_API_KEY || localStorage.getItem("GROQ_API_KEY"))) || "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";
+const _origin = typeof window !== "undefined" && window.location.origin;
+const _defaultProxy = _origin && (_origin.startsWith("http:") || _origin.startsWith("https:")) ? _origin + "/api/groq-advice" : "";
+const GROQ_PROXY_URL = (typeof window !== "undefined" && (window.GROQ_PROXY_URL || localStorage.getItem("GROQ_PROXY_URL"))) || _defaultProxy;
 
 const isChinese = window.location.pathname.includes("index_cn");
 const units = {
@@ -23,6 +29,14 @@ const units = {
     highLabel: isChinese ? "最高温度" : "High Temperatures",
     lowLabel: isChinese ? "最低温度" : "Low Temperatures",
     precipLabel: isChinese ? "总降雨量" : "Total Precipitation",
+    adviceTitle: isChinese ? "今日 AI 建议" : "Today's AI Advice",
+    adviceLoading: isChinese ? "正在生成建议..." : "Generating advice...",
+    adviceFallbackDry: isChinese ? "今天天气总体平稳，适合外出活动，记得补水并注意防晒。" : "Weather is fairly calm today, so it is a good day to go out; stay hydrated and wear sun protection.",
+    adviceFallbackRain: isChinese ? "今天有降雨信号，建议带伞并优先安排室内活动。" : "Rain is likely today, so bring an umbrella and prioritize indoor plans.",
+    adviceFallbackHeat: isChinese ? "今天偏热，建议穿轻薄衣物并减少正午户外停留时间。" : "It looks hot today, so wear light clothing and reduce midday outdoor exposure.",
+    adviceRefreshButton: isChinese ? "换一句建议" : "Refresh advice",
+    adviceError: isChinese ? "无法获取新建议，请稍后再试。" : "Couldn't load new advice. Try again later.",
+    adviceUnavailableSuffix: isChinese ? "（AI 暂不可用）" : " (AI unavailable)",
     historyUnavailable: isChinese ? "历史数据暂不可用" : "History data currently unavailable",
     forecastUnavailable: isChinese ? "预报数据暂不可用" : "Forecast data currently unavailable"
 };
@@ -34,6 +48,10 @@ const chartDataCache = {
     forecast: null,
     history: null
 };
+let latestCurrentSnapshot = null;
+let latestChartSnapshot = null;
+let lastAdviceSignature = "";
+let lastAdviceAtMs = 0;
 
 function revealDashboardOnce() {
     if (hasLoadedOnce) return;
@@ -100,6 +118,170 @@ function updateText(id, text) {
     if (element) {
         element.textContent = text;
     }
+}
+
+function sanitizeAdviceText(rawText) {
+    const cleaned = String(rawText || "")
+        .replace(/\s+/g, " ")
+        .replace(/[*_`#>-]/g, "")
+        .trim();
+    if (!cleaned) return "";
+    if (isChinese) {
+        const firstSentence = cleaned.split(/[。！？]/)[0]?.trim();
+        return firstSentence ? `${firstSentence}。` : cleaned.slice(0, 60);
+    }
+    const firstSentence = cleaned.split(/[.!?]/)[0]?.trim();
+    return firstSentence ? `${firstSentence}.` : cleaned.slice(0, 140);
+}
+
+function fallbackAdvice() {
+    if (!latestCurrentSnapshot) return units.adviceLoading;
+    if (latestCurrentSnapshot.rainRate >= 0.1 || latestCurrentSnapshot.todayRain >= 2) return units.adviceFallbackRain;
+    if (latestCurrentSnapshot.temp >= 30 || latestCurrentSnapshot.uv >= 6) return units.adviceFallbackHeat;
+    return units.adviceFallbackDry;
+}
+
+function getTodayPointIndex(modeData) {
+    if (!modeData) return -1;
+    const todayLabel = isChinese ? "今天" : "Today";
+    const index = modeData.labels.indexOf(todayLabel);
+    if (index >= 0) return index;
+    return chartMode === "forecast" ? 0 : modeData.labels.length - 1;
+}
+
+function runAiAdviceFetch(askForDifferent) {
+    updateText("aiAdviceTitle", units.adviceTitle);
+    if (!latestCurrentSnapshot || !latestChartSnapshot) {
+        updateText("aiAdviceText", fallbackAdvice());
+        return;
+    }
+    updateText("aiAdviceText", units.adviceLoading);
+
+    const trendDelta = Number(latestChartSnapshot.highs.at(-1)) - Number(latestChartSnapshot.highs[0]);
+    let prompt = isChinese
+        ? `你是天气助手。请只输出一句简短建议（不超过30字，不要项目符号，不要表情）。地点深圳。当前温度${formatNumber(latestCurrentSnapshot.temp)}度，紫外线${formatNumber(latestCurrentSnapshot.uv)}，降雨率${formatNumber(latestCurrentSnapshot.rainRate)}毫米每小时。今日最高${formatNumber(latestCurrentSnapshot.todayHigh)}度，最低${formatNumber(latestCurrentSnapshot.todayLow)}度，今日降雨${formatNumber(latestCurrentSnapshot.todayRain)}毫米。温度趋势变化${formatNumber(trendDelta)}度。给出穿衣或活动建议。`
+        : `You are a weather assistant. Output exactly one short advice sentence under 20 words, no emoji, no bullets. Location Shenzhen. Current temp ${formatNumber(latestCurrentSnapshot.temp)}C, UV ${formatNumber(latestCurrentSnapshot.uv)}, rain rate ${formatNumber(latestCurrentSnapshot.rainRate)} mm/h. Today's high ${formatNumber(latestCurrentSnapshot.todayHigh)}C, low ${formatNumber(latestCurrentSnapshot.todayLow)}C, today's rain ${formatNumber(latestCurrentSnapshot.todayRain)} mm. Temperature trend delta ${formatNumber(trendDelta)}C. Give practical clothing or activity advice.`;
+
+    let systemContent = isChinese
+        ? "你是天气生活助手。只输出一句简短、实用、自然的建议，不要表情和项目符号。"
+        : "You are a weather lifestyle assistant. Output exactly one short practical sentence only. No emoji or bullet points.";
+
+    if (askForDifferent) {
+        const nonce = Math.random().toString(36).slice(2, 8);
+        prompt += " [ref:" + nonce + "]";
+        const varyEn = [
+            "This time your sentence must be about what to wear or what layers to use.",
+            "This time your sentence must be about the best time of day to go out or stay in.",
+            "This time your sentence must be about drinking water or sun protection.",
+            "This time your sentence must be about indoor versus outdoor plans.",
+            "This time your sentence must be about feeling comfortable (cool or warm)."
+        ];
+        const varyZh = [
+            "这次必须从穿什么、穿几件给建议。",
+            "这次必须从什么时候出门、什么时候在家给建议。",
+            "这次必须从喝水或防晒给建议。",
+            "这次必须从室内还是室外安排给建议。",
+            "这次必须从体感凉热、舒适度给建议。"
+        ];
+        const vary = isChinese ? varyZh[Math.floor(Math.random() * varyZh.length)] : varyEn[Math.floor(Math.random() * varyEn.length)];
+        systemContent = (isChinese ? "你是天气生活助手。只输出一句简短建议，不要表情和项目符号。" : "You are a weather lifestyle assistant. Output exactly one short sentence only. No emoji or bullet points.") + " " + vary;
+    }
+
+    const refreshBtn = document.getElementById("aiAdviceRefresh");
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+    }
+
+    const useProxy = GROQ_PROXY_URL && GROQ_PROXY_URL.trim().length > 0;
+    const temperature = askForDifferent ? 1.0 : 0.5;
+
+    const proxyUrl = useProxy ? GROQ_PROXY_URL.trim() + (askForDifferent ? "?r=" + Math.random().toString(36).slice(2, 10) : "") : "";
+    const doRequest = useProxy
+        ? fetch(proxyUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
+            body: JSON.stringify({ prompt, systemContent, temperature }),
+            cache: "no-store"
+        }).then((r) => {
+            if (!r.ok) throw new Error(r.status + " " + r.statusText);
+            return r.json();
+        }).then((data) => ({ text: data?.content ?? data?.text ?? "" }))
+        : fetch(GROQ_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: GROQ_MODEL,
+                temperature,
+                max_tokens: isChinese ? 80 : 70,
+                messages: [
+                    { role: "system", content: systemContent },
+                    { role: "user", content: prompt }
+                ]
+            }),
+            cache: "no-store"
+        }).then((response) => {
+            if (!response.ok) {
+                return response.text().then((t) => {
+                    throw new Error(response.status + " " + (t || response.statusText));
+                });
+            }
+            return response.json();
+        }).then((json) => {
+            const textResponse = json?.choices?.[0]?.message?.content || "";
+            return { text: textResponse };
+        });
+
+    doRequest
+        .then(({ text }) => {
+            const advice = sanitizeAdviceText(text);
+            updateText("aiAdviceText", advice || fallbackAdvice());
+        })
+        .catch((err) => {
+            console.warn("Groq/proxy failed, trying pollinations:", err);
+            updateText("aiAdviceText", units.adviceLoading);
+            return fetch("https://text.pollinations.ai/" + encodeURIComponent(prompt), { cache: "no-store" })
+                .then((r) => r.text())
+                .then((raw) => {
+                    const advice = sanitizeAdviceText(raw);
+                    updateText("aiAdviceText", advice || fallbackAdvice());
+                })
+                .catch(() => {
+                    updateText("aiAdviceText", fallbackAdvice() + units.adviceUnavailableSuffix);
+                });
+        })
+        .finally(() => {
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+            }
+        });
+}
+
+function maybeGenerateAiAdvice() {
+    updateText("aiAdviceTitle", units.adviceTitle);
+    if (!latestCurrentSnapshot || !latestChartSnapshot) return;
+
+    const nowMs = Date.now();
+    const minRefreshMs = 20 * 60 * 1000;
+    const adviceSignature = [
+        chartMode,
+        Math.round(latestCurrentSnapshot.temp),
+        Math.round(latestCurrentSnapshot.uv),
+        Math.round(latestCurrentSnapshot.rainRate * 10) / 10,
+        Math.round(latestCurrentSnapshot.todayHigh),
+        Math.round(latestCurrentSnapshot.todayLow),
+        Math.round(latestCurrentSnapshot.todayRain * 10) / 10
+    ].join("|");
+
+    if (adviceSignature === lastAdviceSignature && nowMs - lastAdviceAtMs < minRefreshMs) {
+        return;
+    }
+
+    lastAdviceSignature = adviceSignature;
+    lastAdviceAtMs = nowMs;
+    runAiAdviceFetch();
 }
 
 function updateChartMetaText() {
@@ -321,12 +503,20 @@ function updateCurrentWeather() {
             updateText("weatherStatus", computeStatus(rainRate, uv, temp));
             updateText("lastUpdated", `${units.updated}${new Date().toLocaleTimeString(isChinese ? "zh-CN" : "en-US")}`);
 
+            if (!latestCurrentSnapshot) {
+                latestCurrentSnapshot = {};
+            }
+            latestCurrentSnapshot.temp = temp;
+            latestCurrentSnapshot.uv = uv;
+            latestCurrentSnapshot.rainRate = rainRate;
+
             applyAtmosphereTheme({ rainRate, solar, temp });
             toggleMetricAlert("uvValue", uv >= 7);
             toggleMetricAlert("windSpeedValue", windSpeed * 3.6 >= 25);
             toggleMetricAlert("windGustValue", windGust * 3.6 >= 35);
             toggleMetricAlert("rainRateValue", rainRate >= 8);
 
+            maybeGenerateAiAdvice();
             revealDashboardOnce();
         })
         .catch(() => {
@@ -517,8 +707,17 @@ function fetchDailySeries(url, labelBuilder) {
 }
 
 function renderModeData(modeData) {
+    latestChartSnapshot = modeData;
+    const todayIndex = getTodayPointIndex(modeData);
+    if (todayIndex >= 0) {
+        if (!latestCurrentSnapshot) latestCurrentSnapshot = {};
+        latestCurrentSnapshot.todayHigh = Number(modeData.highs[todayIndex]);
+        latestCurrentSnapshot.todayLow = Number(modeData.lows[todayIndex]);
+        latestCurrentSnapshot.todayRain = Number(modeData.precipTotals[todayIndex]);
+    }
     renderHistoryChart(modeData.labels, modeData.highs, modeData.lows, modeData.precipTotals);
     updateChartInsights(modeData.highs, modeData.lows, modeData.precipTotals);
+    maybeGenerateAiAdvice();
 }
 
 function loadChartModeData() {
@@ -563,8 +762,20 @@ function refreshCurrentChartModeData() {
     loadChartModeData();
 }
 
+function setupAdviceRefreshButton() {
+    const btn = document.getElementById("aiAdviceRefresh");
+    if (!btn) return;
+    btn.textContent = units.adviceRefreshButton;
+    btn.addEventListener("click", () => {
+        lastAdviceSignature = "";
+        lastAdviceAtMs = 0;
+        runAiAdviceFetch(true);
+    });
+}
+
 updateChartMetaText();
 setupChartModeToggle();
+setupAdviceRefreshButton();
 updateCurrentWeather();
 loadChartModeData();
 setInterval(updateCurrentWeather, 10000);
