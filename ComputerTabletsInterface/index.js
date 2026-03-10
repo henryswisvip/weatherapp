@@ -2,10 +2,7 @@ const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "openai/gpt-oss-120b";
-const _origin = typeof window !== "undefined" && window.location.origin;
-const _defaultProxy = _origin && (_origin.startsWith("http:") || _origin.startsWith("https:")) ? _origin + "/api/groq-advice" : "";
-const GROQ_PROXY_URL = (typeof window !== "undefined" && (window.GROQ_PROXY_URL || localStorage.getItem("GROQ_PROXY_URL"))) || _defaultProxy;
+const GROQ_MODEL = "groq/compound";
 const GROQ_API_KEY = "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";
 
 const isChinese = window.location.pathname.includes("index_cn");
@@ -36,7 +33,6 @@ const units = {
     adviceFallbackHeat: isChinese ? "今天偏热，建议穿轻薄衣物并减少正午户外停留时间。" : "It looks hot today, so wear light clothing and reduce midday outdoor exposure.",
     adviceRefreshButton: isChinese ? "换一句建议" : "Refresh advice",
     adviceError: isChinese ? "无法获取新建议，请稍后再试。" : "Couldn't load new advice. Try again later.",
-    adviceUnavailableSuffix: isChinese ? "（AI 暂不可用）" : " (AI unavailable)",
     historyUnavailable: isChinese ? "历史数据暂不可用" : "History data currently unavailable",
     forecastUnavailable: isChinese ? "预报数据暂不可用" : "Forecast data currently unavailable"
 };
@@ -159,32 +155,32 @@ function runAiAdviceFetch(askForDifferent) {
 
     const trendDelta = Number(latestChartSnapshot.highs.at(-1)) - Number(latestChartSnapshot.highs[0]);
     let prompt = isChinese
-        ? `你是天气助手。请只输出一句简短建议（不超过30字，不要项目符号，不要表情）。地点深圳。当前温度${formatNumber(latestCurrentSnapshot.temp)}度，紫外线${formatNumber(latestCurrentSnapshot.uv)}，降雨率${formatNumber(latestCurrentSnapshot.rainRate)}毫米每小时。今日最高${formatNumber(latestCurrentSnapshot.todayHigh)}度，最低${formatNumber(latestCurrentSnapshot.todayLow)}度，今日降雨${formatNumber(latestCurrentSnapshot.todayRain)}毫米。温度趋势变化${formatNumber(trendDelta)}度。给出穿衣或活动建议。`
-        : `You are a weather assistant. Output exactly one short advice sentence under 20 words, no emoji, no bullets. Location Shenzhen. Current temp ${formatNumber(latestCurrentSnapshot.temp)}C, UV ${formatNumber(latestCurrentSnapshot.uv)}, rain rate ${formatNumber(latestCurrentSnapshot.rainRate)} mm/h. Today's high ${formatNumber(latestCurrentSnapshot.todayHigh)}C, low ${formatNumber(latestCurrentSnapshot.todayLow)}C, today's rain ${formatNumber(latestCurrentSnapshot.todayRain)} mm. Temperature trend delta ${formatNumber(trendDelta)}C. Give practical clothing or activity advice.`;
+        ? `地点深圳。当前${formatNumber(latestCurrentSnapshot.temp)}度，紫外线${formatNumber(latestCurrentSnapshot.uv)}，降雨${formatNumber(latestCurrentSnapshot.rainRate)}毫米/时。今日最高${formatNumber(latestCurrentSnapshot.todayHigh)}度、最低${formatNumber(latestCurrentSnapshot.todayLow)}度，降雨${formatNumber(latestCurrentSnapshot.todayRain)}毫米，温度趋势${formatNumber(trendDelta)}度。请根据这些数据给一句温暖、有情绪、让人开心的建议，可以带一点小表情。`
+        : `Location Shenzhen. Current ${formatNumber(latestCurrentSnapshot.temp)}°C, UV ${formatNumber(latestCurrentSnapshot.uv)}, rain ${formatNumber(latestCurrentSnapshot.rainRate)} mm/h. Today's high ${formatNumber(latestCurrentSnapshot.todayHigh)}°C, low ${formatNumber(latestCurrentSnapshot.todayLow)}°C, rain ${formatNumber(latestCurrentSnapshot.todayRain)} mm, trend ${formatNumber(trendDelta)}°C. Give one warm, emotional, delightful piece of advice—you may use a few emojis.`;
 
     let systemContent = isChinese
-        ? "你是天气生活助手。只输出一句简短、实用、自然的建议，不要表情和项目符号。"
-        : "You are a weather lifestyle assistant. Output exactly one short practical sentence only. No emoji or bullet points.";
+        ? "你是贴心又活泼的天气小助手。用一句简短、有温度、带点情绪的话给出建议，让人看了心情好。可以用 1～2 个合适的小表情（emoji）。不要列点，只要一句。"
+        : "You are a warm, cheerful weather buddy. Reply with one short, delightful sentence that feels emotional and uplifting. You may use 1–2 emojis if they fit. No bullet points—just one friendly line.";
 
     if (askForDifferent) {
         const nonce = Math.random().toString(36).slice(2, 8);
         prompt += " [ref:" + nonce + "]";
         const varyEn = [
-            "This time your sentence must be about what to wear or what layers to use.",
-            "This time your sentence must be about the best time of day to go out or stay in.",
-            "This time your sentence must be about drinking water or sun protection.",
-            "This time your sentence must be about indoor versus outdoor plans.",
-            "This time your sentence must be about feeling comfortable (cool or warm)."
+            "This time focus your vibe on what to wear or layers.",
+            "This time focus on the best time to go out or cozy up.",
+            "This time focus on staying hydrated or sun-safe.",
+            "This time focus on indoor vs outdoor plans.",
+            "This time focus on staying comfy (cool or warm)."
         ];
         const varyZh = [
-            "这次必须从穿什么、穿几件给建议。",
-            "这次必须从什么时候出门、什么时候在家给建议。",
-            "这次必须从喝水或防晒给建议。",
-            "这次必须从室内还是室外安排给建议。",
-            "这次必须从体感凉热、舒适度给建议。"
+            "这次从穿什么、穿几件来给建议。",
+            "这次从出门时段或宅家来给建议。",
+            "这次从补水或防晒来给建议。",
+            "这次从室内外安排来给建议。",
+            "这次从体感凉热、舒适度来给建议。"
         ];
         const vary = isChinese ? varyZh[Math.floor(Math.random() * varyZh.length)] : varyEn[Math.floor(Math.random() * varyEn.length)];
-        systemContent = (isChinese ? "你是天气生活助手。只输出一句简短建议，不要表情和项目符号。" : "You are a weather lifestyle assistant. Output exactly one short sentence only. No emoji or bullet points.") + " " + vary;
+        systemContent = (isChinese ? "你是贴心又活泼的天气小助手。用一句简短、有温度的话给建议，可带 1～2 个小表情。" : "You are a warm, cheerful weather buddy. One short, delightful sentence; 1–2 emojis okay.") + " " + vary;
     }
 
     const refreshBtn = document.getElementById("aiAdviceRefresh");
@@ -192,47 +188,35 @@ function runAiAdviceFetch(askForDifferent) {
         refreshBtn.disabled = true;
     }
 
-    const useProxy = GROQ_PROXY_URL && GROQ_PROXY_URL.trim().length > 0;
     const temperature = askForDifferent ? 1.0 : 0.5;
 
-    const proxyUrl = useProxy ? GROQ_PROXY_URL.trim() + (askForDifferent ? "?r=" + Math.random().toString(36).slice(2, 10) : "") : "";
-    const doRequest = useProxy
-        ? fetch(proxyUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
-            body: JSON.stringify({ prompt, systemContent, temperature }),
-            cache: "no-store"
-        }).then((r) => {
-            if (!r.ok) throw new Error(r.status + " " + r.statusText);
-            return r.json();
-        }).then((data) => ({ text: data?.content ?? data?.text ?? "" }))
-        : fetch(GROQ_API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: GROQ_MODEL,
-                temperature,
-                max_tokens: isChinese ? 80 : 70,
-                messages: [
-                    { role: "system", content: systemContent },
-                    { role: "user", content: prompt }
-                ]
-            }),
-            cache: "no-store"
-        }).then((response) => {
-            if (!response.ok) {
-                return response.text().then((t) => {
-                    throw new Error(response.status + " " + (t || response.statusText));
-                });
-            }
-            return response.json();
-        }).then((json) => {
-            const textResponse = json?.choices?.[0]?.message?.content || "";
-            return { text: textResponse };
-        });
+    const doRequest = fetch(GROQ_API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: GROQ_MODEL,
+            temperature,
+            max_tokens: isChinese ? 80 : 70,
+            messages: [
+                { role: "system", content: systemContent },
+                { role: "user", content: prompt }
+            ]
+        }),
+        cache: "no-store"
+    }).then((response) => {
+        if (!response.ok) {
+            return response.text().then((t) => {
+                throw new Error(response.status + " " + (t || response.statusText));
+            });
+        }
+        return response.json();
+    }).then((json) => {
+        const textResponse = json?.choices?.[0]?.message?.content || "";
+        return { text: textResponse };
+    });
 
     doRequest
         .then(({ text }) => {
@@ -240,17 +224,11 @@ function runAiAdviceFetch(askForDifferent) {
             updateText("aiAdviceText", advice || fallbackAdvice());
         })
         .catch((err) => {
-            console.warn("Groq/proxy failed, trying pollinations:", err);
-            updateText("aiAdviceText", units.adviceLoading);
-            return fetch("https://text.pollinations.ai/" + encodeURIComponent(prompt), { cache: "no-store" })
-                .then((r) => r.text())
-                .then((raw) => {
-                    const advice = sanitizeAdviceText(raw);
-                    updateText("aiAdviceText", advice || fallbackAdvice());
-                })
-                .catch(() => {
-                    updateText("aiAdviceText", fallbackAdvice() + units.adviceUnavailableSuffix);
-                });
+            console.error("AI advice request failed:", err);
+            updateText("aiAdviceText", units.adviceError);
+            setTimeout(() => {
+                updateText("aiAdviceText", fallbackAdvice());
+            }, 4000);
         })
         .finally(() => {
             if (refreshBtn) {
