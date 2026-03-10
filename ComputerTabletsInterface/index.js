@@ -6,7 +6,7 @@ const GROQ_MODEL = "openai/gpt-oss-120b";
 const _origin = typeof window !== "undefined" && window.location.origin;
 const _defaultProxy = _origin && (_origin.startsWith("http:") || _origin.startsWith("https:")) ? _origin + "/api/groq-advice" : "";
 const GROQ_PROXY_URL = (typeof window !== "undefined" && (window.GROQ_PROXY_URL || localStorage.getItem("GROQ_PROXY_URL"))) || _defaultProxy;
-const GROQ_API_KEY = "";
+const GROQ_API_KEY = "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";
 
 const isChinese = window.location.pathname.includes("index_cn");
 const units = {
