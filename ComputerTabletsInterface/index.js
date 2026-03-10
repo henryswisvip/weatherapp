@@ -3,11 +3,10 @@ const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&long
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "openai/gpt-oss-120b";
-// Use the proxy so the key stays in server env (GROQ_API_KEY). No key in frontend.
 const _origin = typeof window !== "undefined" && window.location.origin;
 const _defaultProxy = _origin && (_origin.startsWith("http:") || _origin.startsWith("https:")) ? _origin + "/api/groq-advice" : "";
 const GROQ_PROXY_URL = (typeof window !== "undefined" && (window.GROQ_PROXY_URL || localStorage.getItem("GROQ_PROXY_URL"))) || _defaultProxy;
-const GROQ_API_KEY = ""; // Key only in server env via proxy; never in client code.
+const GROQ_API_KEY = "";
 
 const isChinese = window.location.pathname.includes("index_cn");
 const units = {
