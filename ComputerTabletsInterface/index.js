@@ -36,7 +36,6 @@ const units = {
     adviceFallbackHeat: isChinese ? "今天偏热，建议穿轻薄衣物并减少正午户外停留时间。" : "It looks hot today, so wear light clothing and reduce midday outdoor exposure.",
     adviceRefreshButton: isChinese ? "换一句建议" : "Refresh advice",
     adviceError: isChinese ? "无法获取新建议，请稍后再试。" : "Couldn't load new advice. Try again later.",
-    adviceUnavailableSuffix: isChinese ? "（AI 暂不可用）" : " (AI unavailable)",
     historyUnavailable: isChinese ? "历史数据暂不可用" : "History data currently unavailable",
     forecastUnavailable: isChinese ? "预报数据暂不可用" : "Forecast data currently unavailable"
 };
@@ -240,17 +239,11 @@ function runAiAdviceFetch(askForDifferent) {
             updateText("aiAdviceText", advice || fallbackAdvice());
         })
         .catch((err) => {
-            console.warn("Groq/proxy failed, trying pollinations:", err);
-            updateText("aiAdviceText", units.adviceLoading);
-            return fetch("https://text.pollinations.ai/" + encodeURIComponent(prompt), { cache: "no-store" })
-                .then((r) => r.text())
-                .then((raw) => {
-                    const advice = sanitizeAdviceText(raw);
-                    updateText("aiAdviceText", advice || fallbackAdvice());
-                })
-                .catch(() => {
-                    updateText("aiAdviceText", fallbackAdvice() + units.adviceUnavailableSuffix);
-                });
+            console.error("AI advice request failed:", err);
+            updateText("aiAdviceText", units.adviceError);
+            setTimeout(() => {
+                updateText("aiAdviceText", fallbackAdvice());
+            }, 4000);
         })
         .finally(() => {
             if (refreshBtn) {
