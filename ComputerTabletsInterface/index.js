@@ -3,7 +3,8 @@ const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&long
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "openai/gpt-oss-120b";
-const GROQ_API_KEY = (typeof window !== "undefined" && (window.GROQ_API_KEY || localStorage.getItem("GROQ_API_KEY"))) || "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";
+// Set via window.GROQ_API_KEY or localStorage.GROQ_API_KEY, or use the /api/groq-advice proxy with GROQ_API_KEY in server env
+const GROQ_API_KEY = (typeof window !== "undefined" && (window.GROQ_API_KEY || localStorage.getItem("GROQ_API_KEY"))) || "";
 const _origin = typeof window !== "undefined" && window.location.origin;
 const _defaultProxy = _origin && (_origin.startsWith("http:") || _origin.startsWith("https:")) ? _origin + "/api/groq-advice" : "";
 const GROQ_PROXY_URL = (typeof window !== "undefined" && (window.GROQ_PROXY_URL || localStorage.getItem("GROQ_PROXY_URL"))) || _defaultProxy;
