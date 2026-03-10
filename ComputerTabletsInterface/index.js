@@ -3,9 +3,6 @@ const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&long
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "groq/compound";
-const _origin = typeof window !== "undefined" && window.location.origin;
-const _defaultProxy = _origin && (_origin.startsWith("http:") || _origin.startsWith("https:")) ? _origin + "/api/groq-advice" : "";
-const GROQ_PROXY_URL = (typeof window !== "undefined" && (window.GROQ_PROXY_URL || localStorage.getItem("GROQ_PROXY_URL"))) || _defaultProxy;
 const GROQ_API_KEY = "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";
 
 const isChinese = window.location.pathname.includes("index_cn");
@@ -191,47 +188,35 @@ function runAiAdviceFetch(askForDifferent) {
         refreshBtn.disabled = true;
     }
 
-    const useProxy = GROQ_PROXY_URL && GROQ_PROXY_URL.trim().length > 0;
     const temperature = askForDifferent ? 1.0 : 0.5;
 
-    const proxyUrl = useProxy ? GROQ_PROXY_URL.trim() + (askForDifferent ? "?r=" + Math.random().toString(36).slice(2, 10) : "") : "";
-    const doRequest = useProxy
-        ? fetch(proxyUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
-            body: JSON.stringify({ prompt, systemContent, temperature }),
-            cache: "no-store"
-        }).then((r) => {
-            if (!r.ok) throw new Error(r.status + " " + r.statusText);
-            return r.json();
-        }).then((data) => ({ text: data?.content ?? data?.text ?? "" }))
-        : fetch(GROQ_API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: GROQ_MODEL,
-                temperature,
-                max_tokens: isChinese ? 80 : 70,
-                messages: [
-                    { role: "system", content: systemContent },
-                    { role: "user", content: prompt }
-                ]
-            }),
-            cache: "no-store"
-        }).then((response) => {
-            if (!response.ok) {
-                return response.text().then((t) => {
-                    throw new Error(response.status + " " + (t || response.statusText));
-                });
-            }
-            return response.json();
-        }).then((json) => {
-            const textResponse = json?.choices?.[0]?.message?.content || "";
-            return { text: textResponse };
-        });
+    const doRequest = fetch(GROQ_API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: GROQ_MODEL,
+            temperature,
+            max_tokens: isChinese ? 80 : 70,
+            messages: [
+                { role: "system", content: systemContent },
+                { role: "user", content: prompt }
+            ]
+        }),
+        cache: "no-store"
+    }).then((response) => {
+        if (!response.ok) {
+            return response.text().then((t) => {
+                throw new Error(response.status + " " + (t || response.statusText));
+            });
+        }
+        return response.json();
+    }).then((json) => {
+        const textResponse = json?.choices?.[0]?.message?.content || "";
+        return { text: textResponse };
+    });
 
     doRequest
         .then(({ text }) => {
