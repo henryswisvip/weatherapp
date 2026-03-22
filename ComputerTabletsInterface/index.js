@@ -3,7 +3,7 @@ const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&long
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "groq/compound";
-const GROQ_API_KEY = "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";
+const GROQ_API_KEY = "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";
 
 const isChinese = window.location.pathname.includes("index_cn");
 const units = {
