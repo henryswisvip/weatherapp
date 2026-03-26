@@ -35,6 +35,7 @@ struct ContentView: View {
         .frame(minWidth: 980, minHeight: 700)
         .task {
             await viewModel.refresh()
+            viewModel.startAutoRefresh()
         }
     }
 
@@ -50,20 +51,13 @@ struct ContentView: View {
                     } ?? "Loading latest weather data")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+
+                    Text("Updates automatically every minute")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
-
-                Button {
-                    Task {
-                        await viewModel.refresh()
-                    }
-                } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                        .font(.headline)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(viewModel.isLoading)
             }
 
             if let errorMessage = viewModel.errorMessage {
@@ -109,6 +103,7 @@ struct ContentView: View {
 
     private func forecastChart(_ forecast: [ForecastDay]) -> some View {
         let points = indexedForecast(forecast)
+        let maxRain = max(points.map(\.day.precipitationMm).max() ?? 0, 1)
 
         return VStack(alignment: .leading, spacing: 10) {
             Text("7-Day Forecast")
@@ -116,34 +111,57 @@ struct ContentView: View {
 
             Chart {
                 ForEach(points) { point in
-                    BarMark(
+                    LineMark(
                         x: .value("Day", point.label),
                         y: .value("High", point.day.highC)
                     )
-                    .foregroundStyle(.red.opacity(0.35))
-
-                    BarMark(
-                        x: .value("Day", point.label),
-                        y: .value("Low", point.day.lowC)
-                    )
-                    .foregroundStyle(.blue.opacity(0.35))
-
-                    LineMark(
-                        x: .value("Day", point.label),
-                        y: .value("Precipitation", point.day.precipitationMm)
-                    )
-                    .foregroundStyle(.teal)
-                    .lineStyle(StrokeStyle(lineWidth: 2.0))
+                    .foregroundStyle(.red)
+                    .lineStyle(StrokeStyle(lineWidth: 2.4))
                     .interpolationMethod(.catmullRom)
 
                     PointMark(
                         x: .value("Day", point.label),
-                        y: .value("Precipitation", point.day.precipitationMm)
+                        y: .value("High", point.day.highC)
                     )
-                    .foregroundStyle(.teal)
+                    .foregroundStyle(.red)
+
+                    LineMark(
+                        x: .value("Day", point.label),
+                        y: .value("Low", point.day.lowC)
+                    )
+                    .foregroundStyle(.blue)
+                    .lineStyle(StrokeStyle(lineWidth: 2.4))
+                    .interpolationMethod(.catmullRom)
+
+                    PointMark(
+                        x: .value("Day", point.label),
+                        y: .value("Low", point.day.lowC)
+                    )
+                    .foregroundStyle(.blue)
                 }
             }
-            .frame(height: 250)
+            .frame(height: 180)
+            .chartYAxis {
+                AxisMarks(position: .leading)
+            }
+            .chartXAxis {
+                AxisMarks(values: points.map(\.label)) { _ in
+                    AxisValueLabel()
+                }
+            }
+
+            Chart {
+                ForEach(points) { point in
+                    BarMark(
+                        x: .value("Day", point.label),
+                        y: .value("Precipitation", point.day.precipitationMm)
+                    )
+                    .foregroundStyle(.teal.gradient)
+                    .cornerRadius(5)
+                }
+            }
+            .frame(height: 90)
+            .chartYScale(domain: 0...(maxRain + 1))
             .chartYAxis {
                 AxisMarks(position: .leading)
             }
@@ -156,14 +174,17 @@ struct ContentView: View {
             }
 
             HStack(spacing: 16) {
-                Label("High", systemImage: "chart.bar.fill")
+                Label("High", systemImage: "line.diagonal")
                     .foregroundStyle(.red)
-                Label("Low", systemImage: "chart.bar.fill")
+                Label("Low", systemImage: "line.diagonal")
                     .foregroundStyle(.blue)
-                Label("Rain", systemImage: "line.diagonal")
+                Label("Rain", systemImage: "chart.bar.fill")
                     .foregroundStyle(.teal)
+                Spacer()
+                Text("Top: temperature, Bottom: precipitation")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
-            .font(.footnote)
         }
         .padding(18)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -227,8 +248,7 @@ struct ContentView: View {
     }
 
     private func forecastLabel(for day: ForecastDay, at index: Int) -> String {
-        _ = index
-        return WeatherFormatting.shortDayLabel(from: day.dateISO)
+        WeatherFormatting.shortDayLabel(from: day.dateISO, index: index)
     }
 }
 

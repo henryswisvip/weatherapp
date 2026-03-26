@@ -24,7 +24,7 @@ struct WeatherProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherEntry>) -> Void) {
         service.loadSnapshot { result in
             let entry = entry(from: result)
-            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(1800)
+            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
             completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
         }
     }
@@ -146,9 +146,9 @@ private struct MediumWidget: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                ForEach(Array(snapshot.forecast.prefix(3))) { day in
+                ForEach(Array(snapshot.forecast.prefix(3).enumerated()), id: \.element.id) { index, day in
                     HStack {
-                        Text(WeatherFormatting.shortDayLabel(from: day.dateISO))
+                        Text(WeatherFormatting.shortDayLabel(from: day.dateISO, index: index))
                             .frame(width: 62, alignment: .leading)
                         Text("H \(day.highC, specifier: "%.0f")°")
                         Text("L \(day.lowC, specifier: "%.0f")°")

@@ -9,6 +9,9 @@ final class DashboardViewModel: ObservableObject {
 
     private let service: WeatherService
     private var refreshTask: Task<Void, Never>?
+    private var lastForecastRefreshAt: Date?
+    private let currentRefreshIntervalSeconds: TimeInterval = 60
+    private let forecastRefreshIntervalSeconds: TimeInterval = 6 * 60 * 60
 
     init(service: WeatherService = WeatherService()) {
         self.service = service
@@ -26,6 +29,7 @@ final class DashboardViewModel: ObservableObject {
             let latest = try await service.loadSnapshot()
             snapshot = latest
             errorMessage = nil
+            lastForecastRefreshAt = Date()
         } catch {
             errorMessage = error.localizedDescription
             if snapshot == nil {
@@ -39,9 +43,38 @@ final class DashboardViewModel: ObservableObject {
 
         refreshTask = Task {
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(600))
-                await refresh()
+                try? await Task.sleep(for: .seconds(currentRefreshIntervalSeconds))
+                if shouldRefreshForecast() {
+                    await refresh()
+                } else {
+                    await refreshCurrentOnly()
+                }
             }
         }
+    }
+
+    private func refreshCurrentOnly() async {
+        do {
+            let current = try await service.fetchCurrentWeather()
+            if var snapshot {
+                snapshot.current = current
+                self.snapshot = snapshot
+                errorMessage = nil
+            } else {
+                await refresh()
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            if snapshot == nil {
+                snapshot = .sample
+            }
+        }
+    }
+
+    private func shouldRefreshForecast() -> Bool {
+        guard let lastForecastRefreshAt else {
+            return true
+        }
+        return Date().timeIntervalSince(lastForecastRefreshAt) >= forecastRefreshIntervalSeconds
     }
 }

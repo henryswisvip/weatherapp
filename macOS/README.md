@@ -42,6 +42,6 @@ xcodebuild \
 ## Notes
 
 - Current API configuration is in `Shared/Sources/WeatherService.swift` (ported from the existing web app values).
-- macOS app loads data at startup and supports manual refresh from the app header.
-- Widget uses an automatic timeline refresh policy (about every 30 minutes).
+- macOS app refreshes live weather automatically every minute and refreshes forecast data on a longer interval.
+- Widget refresh policy is automatic (about every 15 minutes).
 - For production use, move secrets to a secure backend and avoid embedding keys in client app binaries.
