@@ -3,8 +3,57 @@ import Foundation
 import SwiftUI
 import WeatherShared
 
+private enum ChartMode {
+    case history
+    case forecast
+
+    var chartTitle: String {
+        switch self {
+        case .history:
+            return "Last 7 Days History"
+        case .forecast:
+            return "7-Day Forecast"
+        }
+    }
+
+    var toggleButtonTitle: String {
+        switch self {
+        case .history:
+            return "Show 7-Day Forecast"
+        case .forecast:
+            return "Show Last 7 Days"
+        }
+    }
+
+    var cardsTitle: String {
+        switch self {
+        case .history:
+            return "Last 7 Days Rain"
+        case .forecast:
+            return "Rain Outlook"
+        }
+    }
+
+    var chartFootnote: String {
+        switch self {
+        case .history:
+            return "Top: historical temperature, Bottom: daily rain total"
+        case .forecast:
+            return "Top: forecast temperature, Bottom: forecast precipitation"
+        }
+    }
+}
+
+private struct TrendDay {
+    let dateISO: String
+    let highC: Double?
+    let lowC: Double?
+    let precipitationMm: Double
+}
+
 struct ContentView: View {
     @StateObject private var viewModel = DashboardViewModel()
+    @State private var chartMode: ChartMode = .history
 
     var body: some View {
         ZStack {
@@ -21,8 +70,8 @@ struct ContentView: View {
 
                     if let snapshot = viewModel.snapshot {
                         currentSection(snapshot.current)
-                        forecastChart(snapshot.forecast)
-                        forecastCards(snapshot.forecast)
+                        trendChart(snapshot)
+                        trendCards(snapshot)
                     } else if viewModel.isLoading {
                         loadingState
                     } else {
@@ -101,75 +150,161 @@ struct ContentView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
-    private func forecastChart(_ forecast: [ForecastDay]) -> some View {
-        let points = indexedForecast(forecast)
-        let maxRain = max(points.map(\.day.precipitationMm).max() ?? 0, 1)
+    private func trendChart(_ snapshot: WeatherSnapshot) -> some View {
+        let points = indexedTrendDays(for: snapshot)
+        let maxRain = max(points.map(\.day.precipitationMm).max() ?? 0, 0.2)
+        let tempDomain = temperatureDomain(for: points)
 
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("7-Day Forecast")
-                .font(.title3.weight(.semibold))
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center) {
+                Text(chartMode.chartTitle)
+                    .font(.title3.weight(.semibold))
 
-            Chart {
-                ForEach(points) { point in
-                    LineMark(
-                        x: .value("Day", point.label),
-                        y: .value("High", point.day.highC)
-                    )
-                    .foregroundStyle(.red)
-                    .lineStyle(StrokeStyle(lineWidth: 2.4))
-                    .interpolationMethod(.catmullRom)
+                Spacer()
 
-                    PointMark(
-                        x: .value("Day", point.label),
-                        y: .value("High", point.day.highC)
-                    )
-                    .foregroundStyle(.red)
-
-                    LineMark(
-                        x: .value("Day", point.label),
-                        y: .value("Low", point.day.lowC)
-                    )
-                    .foregroundStyle(.blue)
-                    .lineStyle(StrokeStyle(lineWidth: 2.4))
-                    .interpolationMethod(.catmullRom)
-
-                    PointMark(
-                        x: .value("Day", point.label),
-                        y: .value("Low", point.day.lowC)
-                    )
-                    .foregroundStyle(.blue)
+                Button {
+                    withAnimation(.easeOut(duration: 0.65)) {
+                        chartMode = chartMode == .forecast ? .history : .forecast
+                    }
+                } label: {
+                    Label(chartMode.toggleButtonTitle, systemImage: "arrow.triangle.2.circlepath")
+                        .font(.subheadline.weight(.semibold))
                 }
-            }
-            .frame(height: 180)
-            .chartYAxis {
-                AxisMarks(position: .leading)
-            }
-            .chartXAxis {
-                AxisMarks(values: points.map(\.label)) { _ in
-                    AxisValueLabel()
-                }
+                .buttonStyle(.bordered)
             }
 
             Chart {
                 ForEach(points) { point in
-                    BarMark(
-                        x: .value("Day", point.label),
-                        y: .value("Precipitation", point.day.precipitationMm)
-                    )
-                    .foregroundStyle(.teal.gradient)
-                    .cornerRadius(5)
+                    if let high = point.day.highC, let low = point.day.lowC {
+                        AreaMark(
+                            x: .value("Day", point.label),
+                            yStart: .value("Low Band", low),
+                            yEnd: .value("High Band", high)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color.red.opacity(0.16),
+                                    Color.blue.opacity(0.14)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .interpolationMethod(.catmullRom)
+                    }
+
+                    if let high = point.day.highC {
+                        LineMark(
+                            x: .value("Day", point.label),
+                            y: .value("High", high)
+                        )
+                        .foregroundStyle(.red)
+                        .lineStyle(StrokeStyle(lineWidth: 2.8))
+                        .interpolationMethod(.catmullRom)
+
+                        PointMark(
+                            x: .value("Day", point.label),
+                            y: .value("High", high)
+                        )
+                        .foregroundStyle(.red)
+                        .symbolSize(48)
+                    }
+
+                    if let low = point.day.lowC {
+                        LineMark(
+                            x: .value("Day", point.label),
+                            y: .value("Low", low)
+                        )
+                        .foregroundStyle(.blue)
+                        .lineStyle(StrokeStyle(lineWidth: 2.8))
+                        .interpolationMethod(.catmullRom)
+
+                        PointMark(
+                            x: .value("Day", point.label),
+                            y: .value("Low", low)
+                        )
+                        .foregroundStyle(.blue)
+                        .symbolSize(48)
+                    }
                 }
             }
-            .frame(height: 90)
-            .chartYScale(domain: 0...(maxRain + 1))
+            .frame(height: 240)
+            .chartYScale(domain: tempDomain)
             .chartYAxis {
-                AxisMarks(position: .leading)
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+                        .foregroundStyle(.secondary.opacity(0.3))
+                    AxisTick()
+                    AxisValueLabel {
+                        if let tempValue = value.as(Double.self) {
+                            Text("\(Int(tempValue.rounded()))°")
+                        }
+                    }
+                }
             }
             .chartXAxis {
                 AxisMarks(values: points.map(\.label)) { _ in
-                    AxisGridLine()
+                    AxisGridLine().foregroundStyle(.secondary.opacity(0.2))
                     AxisTick()
                     AxisValueLabel()
+                }
+            }
+            .chartPlotStyle { plot in
+                plot
+                    .background(Color.white.opacity(0.25))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(chartMode == .history ? "Daily Rainfall (mm)" : "Forecast Rainfall (mm)")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Chart {
+                    ForEach(points) { point in
+                        BarMark(
+                            x: .value("Day", point.label),
+                            y: .value("Precipitation", point.day.precipitationMm)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color.teal.opacity(0.55),
+                                    Color.cyan.opacity(0.9)
+                                ],
+                                startPoint: .bottom,
+                                endPoint: .top
+                            )
+                        )
+                        .cornerRadius(7)
+                    }
+                }
+                .frame(height: 110)
+                .chartYScale(domain: 0...(maxRain * 1.4))
+                .chartYAxis {
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
+                        AxisGridLine().foregroundStyle(.secondary.opacity(0.25))
+                        AxisTick()
+                        AxisValueLabel {
+                            if let rainValue = value.as(Double.self) {
+                                Text(rainValue == 0 ? "0" : format(rainValue, 1))
+                            }
+                        }
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks(values: points.map(\.label)) { _ in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                            .foregroundStyle(.secondary.opacity(0.2))
+                        AxisTick()
+                        AxisValueLabel()
+                    }
+                }
+                .chartPlotStyle { plot in
+                    plot
+                        .background(Color.white.opacity(0.2))
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
             }
 
@@ -181,29 +316,33 @@ struct ContentView: View {
                 Label("Rain", systemImage: "chart.bar.fill")
                     .foregroundStyle(.teal)
                 Spacer()
-                Text("Top: temperature, Bottom: precipitation")
+                Text(chartMode.chartFootnote)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
+        .animation(.easeOut(duration: 0.65), value: chartMode)
+        .animation(.easeOut(duration: 0.65), value: chartAnimationSeed(points))
         .padding(18)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
-    private func forecastCards(_ forecast: [ForecastDay]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Rain Outlook")
+    private func trendCards(_ snapshot: WeatherSnapshot) -> some View {
+        let points = indexedTrendDays(for: snapshot)
+
+        return VStack(alignment: .leading, spacing: 10) {
+            Text(chartMode.cardsTitle)
                 .font(.title3.weight(.semibold))
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: 10)], spacing: 10) {
-                ForEach(forecast) { day in
+                ForEach(points) { point in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(WeatherFormatting.shortDayLabel(from: day.dateISO))
+                        Text(point.label)
                             .font(.headline)
-                        Text("H \(format(day.highC, 0))°  L \(format(day.lowC, 0))°")
+                        Text("H \(temperatureText(point.day.highC))  L \(temperatureText(point.day.lowC))")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                        Label("\(format(day.precipitationMm, 1)) mm", systemImage: "drop.fill")
+                        Label("\(format(point.day.precipitationMm, 1)) mm", systemImage: "drop.fill")
                             .font(.footnote)
                             .foregroundStyle(.teal)
                     }
@@ -213,6 +352,7 @@ struct ContentView: View {
                 }
             }
         }
+        .animation(.easeOut(duration: 0.65), value: chartMode)
         .padding(18)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
@@ -241,14 +381,73 @@ struct ContentView: View {
         String(format: "%.\(digits)f", value)
     }
 
-    private func indexedForecast(_ forecast: [ForecastDay]) -> [IndexedForecast] {
-        forecast.enumerated().map { index, day in
-            IndexedForecast(index: index, day: day, label: forecastLabel(for: day, at: index))
+    private func temperatureText(_ value: Double?) -> String {
+        guard let value else {
+            return "--"
+        }
+        return "\(format(value, 0))°"
+    }
+
+    private func chartAnimationSeed(_ points: [IndexedTrendDay]) -> String {
+        points.map { point in
+            let high = point.day.highC.map(String.init(describing:)) ?? "nil"
+            let low = point.day.lowC.map(String.init(describing:)) ?? "nil"
+            return "\(point.day.dateISO):\(high):\(low):\(point.day.precipitationMm)"
+        }
+        .joined(separator: "|")
+    }
+
+    private func temperatureDomain(for points: [IndexedTrendDay]) -> ClosedRange<Double> {
+        let highs = points.compactMap(\.day.highC)
+        let lows = points.compactMap(\.day.lowC)
+
+        guard
+            let minLow = lows.min(),
+            let maxHigh = highs.max()
+        else {
+            return 0...40
+        }
+
+        let padding = max(1.2, (maxHigh - minLow) * 0.25)
+        let minValue = minLow - padding
+        let maxValue = maxHigh + padding
+        return minValue...maxValue
+    }
+
+    private func indexedTrendDays(for snapshot: WeatherSnapshot) -> [IndexedTrendDay] {
+        let days: [TrendDay]
+        switch chartMode {
+        case .forecast:
+            days = snapshot.forecast.map {
+                TrendDay(dateISO: $0.dateISO, highC: $0.highC, lowC: $0.lowC, precipitationMm: $0.precipitationMm)
+            }
+        case .history:
+            if snapshot.history.isEmpty {
+                days = snapshot.forecast.map {
+                    TrendDay(dateISO: $0.dateISO, highC: $0.highC, lowC: $0.lowC, precipitationMm: $0.precipitationMm)
+                }
+            } else {
+                days = snapshot.history.map {
+                    TrendDay(dateISO: $0.dateISO, highC: $0.highC, lowC: $0.lowC, precipitationMm: $0.precipitationMm)
+                }
+            }
+        }
+
+        return days.enumerated().map { index, day in
+            IndexedTrendDay(index: index, day: day, label: trendLabel(for: day, at: index, totalCount: days.count))
         }
     }
 
-    private func forecastLabel(for day: ForecastDay, at index: Int) -> String {
-        WeatherFormatting.shortDayLabel(from: day.dateISO, index: index)
+    private func trendLabel(for day: TrendDay, at index: Int, totalCount: Int) -> String {
+        switch chartMode {
+        case .forecast:
+            return WeatherFormatting.shortDayLabel(from: day.dateISO, index: index)
+        case .history:
+            if index == totalCount - 1 {
+                return "Today"
+            }
+            return WeatherFormatting.weekdayLabel(from: day.dateISO)
+        }
     }
 }
 
@@ -271,12 +470,12 @@ private struct MetricCard: View {
     }
 }
 
-private struct IndexedForecast: Identifiable {
+private struct IndexedTrendDay: Identifiable {
     let index: Int
-    let day: ForecastDay
+    let day: TrendDay
     let label: String
 
     var id: String {
-        day.id
+        day.dateISO
     }
 }

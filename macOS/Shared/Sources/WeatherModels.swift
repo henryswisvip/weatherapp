@@ -78,13 +78,50 @@ public struct ForecastDay: Codable, Identifiable, Sendable {
     }
 }
 
+public struct HistoryDay: Codable, Identifiable, Sendable {
+    public var id: String { dateISO }
+    public var dateISO: String
+    public var highC: Double?
+    public var lowC: Double?
+    public var precipitationMm: Double
+
+    public init(dateISO: String, highC: Double?, lowC: Double?, precipitationMm: Double) {
+        self.dateISO = dateISO
+        self.highC = highC
+        self.lowC = lowC
+        self.precipitationMm = precipitationMm
+    }
+}
+
 public struct WeatherSnapshot: Codable, Sendable {
     public var current: WeatherCurrent
     public var forecast: [ForecastDay]
+    public var history: [HistoryDay]
 
-    public init(current: WeatherCurrent, forecast: [ForecastDay]) {
+    public init(current: WeatherCurrent, forecast: [ForecastDay], history: [HistoryDay]) {
         self.current = current
         self.forecast = forecast
+        self.history = history
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case current
+        case forecast
+        case history
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        current = try container.decode(WeatherCurrent.self, forKey: .current)
+        forecast = try container.decode([ForecastDay].self, forKey: .forecast)
+        history = try container.decodeIfPresent([HistoryDay].self, forKey: .history) ?? []
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(current, forKey: .current)
+        try container.encode(forecast, forKey: .forecast)
+        try container.encode(history, forKey: .history)
     }
 
     public static let sample = WeatherSnapshot(
@@ -106,6 +143,15 @@ public struct WeatherSnapshot: Codable, Sendable {
             ForecastDay(dateISO: "2026-03-25", highC: 29, lowC: 23, precipitationMm: 0.2),
             ForecastDay(dateISO: "2026-03-26", highC: 30, lowC: 24, precipitationMm: 1.8),
             ForecastDay(dateISO: "2026-03-27", highC: 31, lowC: 24, precipitationMm: 3.4)
+        ],
+        history: [
+            HistoryDay(dateISO: "2026-03-19", highC: 26, lowC: 20, precipitationMm: 0.0),
+            HistoryDay(dateISO: "2026-03-20", highC: 25, lowC: 19, precipitationMm: 2.8),
+            HistoryDay(dateISO: "2026-03-21", highC: 24, lowC: 18, precipitationMm: 4.2),
+            HistoryDay(dateISO: "2026-03-22", highC: 25, lowC: 19, precipitationMm: 1.2),
+            HistoryDay(dateISO: "2026-03-23", highC: 27, lowC: 20, precipitationMm: 0.0),
+            HistoryDay(dateISO: "2026-03-24", highC: 28, lowC: 21, precipitationMm: 0.7),
+            HistoryDay(dateISO: "2026-03-25", highC: 29, lowC: 22, precipitationMm: 0.1)
         ]
     )
 }

@@ -43,5 +43,7 @@ xcodebuild \
 
 - Current API configuration is in `Shared/Sources/WeatherService.swift` (ported from the existing web app values).
 - macOS app refreshes live weather automatically every minute and refreshes forecast data on a longer interval.
+- Chart section includes a mode toggle: **Last 7 Days History** (Ecowitt history API) and **7-Day Forecast** (Open-Meteo).
+- Chart transitions animate when switching between history and forecast modes.
 - Widget refresh policy is automatic (about every 15 minutes).
 - For production use, move secrets to a secure backend and avoid embedding keys in client app binaries.

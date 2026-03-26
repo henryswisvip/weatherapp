@@ -1,4 +1,4 @@
-import Foundation
+@preconcurrency import Foundation
 
 public struct WeatherConfiguration: Sendable {
     public var ecowittApplicationKey: String
@@ -33,6 +33,8 @@ public struct WeatherConfiguration: Sendable {
 public enum WeatherServiceError: LocalizedError {
     case invalidRealtimeResponse
     case invalidForecastResponse
+    case invalidHistoryResponse
+    case historyFailure(message: String)
     case networkFailure(statusCode: Int)
 
     public var errorDescription: String? {
@@ -41,6 +43,10 @@ public enum WeatherServiceError: LocalizedError {
             return "Could not parse real-time weather response."
         case .invalidForecastResponse:
             return "Could not parse forecast response."
+        case .invalidHistoryResponse:
+            return "Could not parse historical weather response."
+        case .historyFailure(let message):
+            return "Historical weather request failed: \(message)"
         case .networkFailure(let statusCode):
             return "Weather request failed with HTTP \(statusCode)."
         }
@@ -59,7 +65,8 @@ public struct WeatherService: Sendable {
     public func loadSnapshot() async throws -> WeatherSnapshot {
         async let current = fetchCurrentWeather()
         async let forecast = fetchForecast()
-        return try await WeatherSnapshot(current: current, forecast: forecast)
+        async let history = fetchHistory()
+        return try await WeatherSnapshot(current: current, forecast: forecast, history: history)
     }
 
     public func loadSnapshot(completion: @escaping (Result<WeatherSnapshot, Error>) -> Void) {
@@ -73,12 +80,20 @@ public struct WeatherService: Sendable {
                     case .failure(let error):
                         completion(.failure(error))
                     case .success(let forecastData):
-                        do {
-                            let current = try decodeCurrent(from: realtimeData)
-                            let forecast = try decodeForecast(from: forecastData)
-                            completion(.success(WeatherSnapshot(current: current, forecast: forecast)))
-                        } catch {
-                            completion(.failure(error))
+                        requestData(with: makeHistoryURL()) { historyResult in
+                            switch historyResult {
+                            case .failure(let error):
+                                completion(.failure(error))
+                            case .success(let historyData):
+                                do {
+                                    let current = try decodeCurrent(from: realtimeData)
+                                    let forecast = try decodeForecast(from: forecastData)
+                                    let history = try decodeHistory(from: historyData)
+                                    completion(.success(WeatherSnapshot(current: current, forecast: forecast, history: history)))
+                                } catch {
+                                    completion(.failure(error))
+                                }
+                            }
                         }
                     }
                 }
@@ -94,6 +109,11 @@ public struct WeatherService: Sendable {
     public func fetchForecast() async throws -> [ForecastDay] {
         let data = try await requestData(from: makeForecastURL())
         return try decodeForecast(from: data)
+    }
+
+    public func fetchHistory() async throws -> [HistoryDay] {
+        let data = try await requestData(from: makeHistoryURL())
+        return try decodeHistory(from: data)
     }
 
     private func decodeCurrent(from data: Data) throws -> WeatherCurrent {
@@ -158,6 +178,71 @@ public struct WeatherService: Sendable {
         }
     }
 
+    private func decodeHistory(from data: Data) throws -> [HistoryDay] {
+        let decoder = JSONDecoder()
+        let envelope = try decoder.decode(HistoryEnvelope.self, from: data)
+
+        if envelope.code != 0 {
+            throw WeatherServiceError.historyFailure(message: envelope.message ?? "Unknown history API error.")
+        }
+
+        let dates = buildLastSevenDatesEndingToday()
+        guard !dates.isEmpty else {
+            throw WeatherServiceError.invalidHistoryResponse
+        }
+
+        var byDate = Dictionary(uniqueKeysWithValues: dates.map {
+            ($0, HistoryAggregate(high: nil, low: nil, rain: 0))
+        })
+
+        let temperatureSeries = envelope.data?.outdoor?.temperature?.list ?? [:]
+        for (timestamp, seriesValue) in temperatureSeries {
+            guard
+                let epochSeconds = Double(timestamp),
+                let value = seriesValue.value
+            else {
+                continue
+            }
+
+            let isoDate = isoDateString(forUnixSeconds: epochSeconds)
+            guard var aggregate = byDate[isoDate] else {
+                continue
+            }
+
+            aggregate.high = max(aggregate.high ?? value, value)
+            aggregate.low = min(aggregate.low ?? value, value)
+            byDate[isoDate] = aggregate
+        }
+
+        let rainSeries = envelope.data?.rainfall?.daily?.list ?? [:]
+        for (timestamp, seriesValue) in rainSeries {
+            guard
+                let epochSeconds = Double(timestamp),
+                let value = seriesValue.value
+            else {
+                continue
+            }
+
+            let isoDate = isoDateString(forUnixSeconds: epochSeconds)
+            guard var aggregate = byDate[isoDate] else {
+                continue
+            }
+
+            aggregate.rain = max(aggregate.rain, value)
+            byDate[isoDate] = aggregate
+        }
+
+        return dates.map { date in
+            let aggregate = byDate[date] ?? HistoryAggregate(high: nil, low: nil, rain: 0)
+            return HistoryDay(
+                dateISO: date,
+                highC: aggregate.high,
+                lowC: aggregate.low,
+                precipitationMm: aggregate.rain
+            )
+        }
+    }
+
     private func requestData(from url: URL) async throws -> Data {
         let (data, response) = try await session.data(from: url)
         guard let http = response as? HTTPURLResponse else {
@@ -170,28 +255,29 @@ public struct WeatherService: Sendable {
     }
 
     private func requestData(with url: URL, completion: @escaping (Result<Data, Error>) -> Void) {
+        let completionBox = DataCompletionBox(completion)
         session.dataTask(with: url) { data, response, error in
             if let error {
-                completion(.failure(error))
+                completionBox.completion(.failure(error))
                 return
             }
 
             guard let http = response as? HTTPURLResponse else {
-                completion(.failure(URLError(.badServerResponse)))
+                completionBox.completion(.failure(URLError(.badServerResponse)))
                 return
             }
 
             guard 200..<300 ~= http.statusCode else {
-                completion(.failure(WeatherServiceError.networkFailure(statusCode: http.statusCode)))
+                completionBox.completion(.failure(WeatherServiceError.networkFailure(statusCode: http.statusCode)))
                 return
             }
 
             guard let data else {
-                completion(.failure(WeatherServiceError.invalidRealtimeResponse))
+                completionBox.completion(.failure(WeatherServiceError.invalidRealtimeResponse))
                 return
             }
 
-            completion(.success(data))
+            completionBox.completion(.success(data))
         }.resume()
     }
 
@@ -220,6 +306,56 @@ public struct WeatherService: Sendable {
             URLQueryItem(name: "forecast_days", value: String(configuration.forecastDays))
         ]
         return components.url!
+    }
+
+    private func makeHistoryURL() -> URL {
+        let dates = buildLastSevenDatesEndingToday()
+        let startDate = dates.first ?? isoDateString(for: Date())
+        let endDate = dates.last ?? startDate
+
+        var components = URLComponents(string: "https://api.ecowitt.net/api/v3/device/history")!
+        components.queryItems = [
+            URLQueryItem(name: "application_key", value: configuration.ecowittApplicationKey),
+            URLQueryItem(name: "api_key", value: configuration.ecowittAPIKey),
+            URLQueryItem(name: "mac", value: configuration.ecowittMAC),
+            URLQueryItem(name: "call_back", value: "outdoor.temperature,rainfall.daily"),
+            URLQueryItem(name: "cycle_type", value: "5min"),
+            URLQueryItem(name: "start_date", value: "\(startDate) 00:00:00"),
+            URLQueryItem(name: "end_date", value: "\(endDate) 23:59:59"),
+            URLQueryItem(name: "temp_unitid", value: "1"),
+            URLQueryItem(name: "rainfall_unitid", value: "12")
+        ]
+        return components.url!
+    }
+
+    private func buildLastSevenDatesEndingToday() -> [String] {
+        let calendar = shanghaiCalendar
+        let today = calendar.startOfDay(for: Date())
+
+        return (0..<7).compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: offset - 6, to: today) else {
+                return nil
+            }
+            return isoDateString(for: day)
+        }
+    }
+
+    private var shanghaiCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: configuration.timezone) ?? .current
+        return calendar
+    }
+
+    private func isoDateString(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = shanghaiCalendar
+        formatter.timeZone = shanghaiCalendar.timeZone
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+
+    private func isoDateString(forUnixSeconds seconds: Double) -> String {
+        isoDateString(for: Date(timeIntervalSince1970: seconds))
     }
 
     private func selectSymbol(temp: Double, solar: Double, rainRate: Double) -> String {
@@ -390,5 +526,55 @@ private struct ForecastDaily: Decodable {
         case temperatureMax = "temperature_2m_max"
         case temperatureMin = "temperature_2m_min"
         case precipitationSum = "precipitation_sum"
+    }
+}
+
+private struct HistoryAggregate {
+    var high: Double?
+    var low: Double?
+    var rain: Double
+}
+
+private struct HistoryEnvelope: Decodable {
+    let code: Int
+    let message: String?
+    let data: HistoryData?
+
+    enum CodingKeys: String, CodingKey {
+        case code
+        case message = "msg"
+        case data
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        code = (try? container.decode(FlexibleDouble.self, forKey: .code).value).map(Int.init) ?? -1
+        message = try container.decodeIfPresent(String.self, forKey: .message)
+        data = try container.decodeIfPresent(HistoryData.self, forKey: .data)
+    }
+}
+
+private struct HistoryData: Decodable {
+    let outdoor: HistoryOutdoor?
+    let rainfall: HistoryRainfall?
+}
+
+private struct HistoryOutdoor: Decodable {
+    let temperature: HistorySeries?
+}
+
+private struct HistoryRainfall: Decodable {
+    let daily: HistorySeries?
+}
+
+private struct HistorySeries: Decodable {
+    let list: [String: SensorValue]?
+}
+
+private final class DataCompletionBox: @unchecked Sendable {
+    let completion: (Result<Data, Error>) -> Void
+
+    init(_ completion: @escaping (Result<Data, Error>) -> Void) {
+        self.completion = completion
     }
 }
