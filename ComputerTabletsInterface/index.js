@@ -1,13 +1,7 @@
 const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
-const HUGGING_FACE_MODELS = [
-    "meta-llama/Llama-3.1-8B-Instruct",
-    "Qwen/Qwen2.5-7B-Instruct",
-    "katanemo/Arch-Router-1.5B"
-];
-const HUGGING_FACE_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
-const HUGGING_FACE_API_KEY = "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";
+const HF_ADVICE_PROXY_URL = "/api/hf-advice";
 
 const isChinese = window.location.pathname.includes("index_cn");
 const units = {
@@ -150,56 +144,29 @@ function getTodayPointIndex(modeData) {
 }
 
 function requestAdviceFromHuggingFace(systemContent, prompt, temperature) {
-    const tryModelAt = (modelIndex) => {
-        const model = HUGGING_FACE_MODELS[modelIndex];
-        if (!model) {
-            return Promise.reject(new Error("No Hugging Face model returned a response"));
+    return fetch(HF_ADVICE_PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            prompt,
+            systemContent,
+            temperature,
+            max_tokens: isChinese ? 80 : 70
+        }),
+        cache: "no-store"
+    }).then((response) => {
+        if (!response.ok) {
+            return response.json().then((data) => {
+                throw new Error(data?.error || `${response.status} ${response.statusText}`);
+            });
         }
-
-        return fetch(HUGGING_FACE_CHAT_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${HUGGING_FACE_API_KEY}`
-            },
-            body: JSON.stringify({
-                model,
-                temperature,
-                max_tokens: isChinese ? 80 : 70,
-                messages: [
-                    { role: "system", content: systemContent },
-                    { role: "user", content: prompt }
-                ]
-            }),
-            cache: "no-store"
-        }).then((response) => {
-            if (!response.ok) {
-                return response.text().then((t) => {
-                    throw new Error(`[${model}] ${response.status} ${t || response.statusText}`);
-                });
-            }
-            return response.json();
-        }).then((json) => {
-            if (json?.error) {
-                throw new Error(`[${model}] ${json.error}`);
-            }
-
-            const textResponse = json?.choices?.[0]?.message?.content || "";
-
-            if (!textResponse.trim()) {
-                throw new Error(`[${model}] Empty response`);
-            }
-            return { text: textResponse, model };
-        }).catch((err) => {
-            if (modelIndex >= HUGGING_FACE_MODELS.length - 1) {
-                throw err;
-            }
-            console.warn(`Model ${model} failed, trying next model`, err);
-            return tryModelAt(modelIndex + 1);
-        });
-    };
-
-    return tryModelAt(0);
+        return response.json();
+    }).then((data) => {
+        if (!data.text?.trim()) {
+            throw new Error("Empty response from AI");
+        }
+        return { text: data.text, model: data.model };
+    });
 }
 
 function runAiAdviceFetch(askForDifferent) {
