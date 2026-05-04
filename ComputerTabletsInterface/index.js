@@ -1,9 +1,10 @@
-const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
+const API_URL = https://api.weather.com/v2/pws/dailysummary/7day?stationId=ISHENZ65&format=json&units=m&apiKey=2fc44795e5144333844795e514d3338f;
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const HF_ADVICE_PROXY_URL = "/api/hf-advice";
 
 const isChinese = window.location.pathname.includes("index_cn");
+
 const units = {
     feelsLike: isChinese ? "体感温度：" : "Feels like: ",
     updated: isChinese ? "更新时间：" : "Last updated: ",
@@ -38,10 +39,12 @@ const units = {
 let trendChart = null;
 let hasLoadedOnce = false;
 let chartMode = "history";
+
 const chartDataCache = {
     forecast: null,
     history: null
 };
+
 let latestCurrentSnapshot = null;
 let latestChartSnapshot = null;
 let lastAdviceSignature = "";
@@ -49,6 +52,7 @@ let lastAdviceAtMs = 0;
 
 function revealDashboardOnce() {
     if (hasLoadedOnce) return;
+
     document.body.classList.remove("is-loading");
     document.body.classList.add("is-revealing");
     hasLoadedOnce = true;
@@ -60,7 +64,107 @@ function revealDashboardOnce() {
 }
 
 function getValue(node, fallback = "--") {
-    return typeof node?.value !== "undefined" ? node.value : fallback;
+    if (node && typeof node === "object" && typeof node.value !== "undefined") {
+        return node.value;
+    }
+
+    if (typeof node !== "undefined" && node !== null) {
+        return node;
+    }
+
+    return fallback;
+}
+
+function getFirstValue(nodes, fallback = "--") {
+    for (const node of nodes) {
+        const value = getValue(node, undefined);
+
+        if (typeof value !== "undefined" && value !== null && value !== "--") {
+            return value;
+        }
+    }
+
+    return fallback;
+}
+
+function getRainRate(data) {
+    return Number(getFirstValue([
+        data.rain?.rainrate,
+        data.rain?.rain_rate,
+        data.rainfall?.rain_rate,
+        data.rainfall?.rainrate,
+        data.rain?.rate,
+        data.rainfall?.rate
+    ], 0));
+}
+
+function getTemperature(data) {
+    return Number(getFirstValue([
+        data.outdoor?.temperature,
+        data.temperature,
+        data.temp
+    ], NaN));
+}
+
+function getFeelsLike(data) {
+    return Number(getFirstValue([
+        data.outdoor?.feels_like,
+        data.outdoor?.feelsLike,
+        data.feels_like,
+        data.feelsLike
+    ], NaN));
+}
+
+function getHumidity(data) {
+    return Number(getFirstValue([
+        data.outdoor?.humidity,
+        data.humidity
+    ], NaN));
+}
+
+function getWindSpeed(data) {
+    return Number(getFirstValue([
+        data.wind?.wind_speed,
+        data.wind?.windspeed,
+        data.wind_speed,
+        data.windspeed
+    ], 0));
+}
+
+function getWindGust(data) {
+    return Number(getFirstValue([
+        data.wind?.wind_gust,
+        data.wind?.windgust,
+        data.wind_gust,
+        data.windgust
+    ], 0));
+}
+
+function getWindDirection(data) {
+    return Number(getFirstValue([
+        data.wind?.wind_direction,
+        data.wind?.winddir,
+        data.wind_direction,
+        data.winddir
+    ], NaN));
+}
+
+function getSolar(data) {
+    return Number(getFirstValue([
+        data.solar_and_uvi?.solar,
+        data.solar?.solar,
+        data.solarRadiation,
+        data.solar
+    ], 0));
+}
+
+function getUv(data) {
+    return Number(getFirstValue([
+        data.solar_and_uvi?.uvi,
+        data.solar_and_uvi?.uv,
+        data.uv,
+        data.uvi
+    ], 0));
 }
 
 function formatNumber(value, digits = 1) {
@@ -82,11 +186,11 @@ function degreesToCompass(degrees) {
 }
 
 function selectWeatherIcon(data) {
-    const temperature = Number(getValue(data.outdoor?.temperature));
-    const solar = Number(getValue(data.solar_and_uvi?.solar));
-    const rainRate = Number(getValue(data.rainfall?.rain_rate));
+    const temperature = getTemperature(data);
+    const solar = getSolar(data);
+    const rainRate = getRainRate(data);
 
-    if (rainRate > 50) return "images/heavy rain .png";
+    if (rainRate > 50) return "images/heavy rain.png";
     if (rainRate > 10 && solar > 50) return "images/small rain.png";
     if (rainRate > 10) return "images/rain.png";
     if (rainRate > 0) return "images/drizzle.png";
@@ -97,6 +201,7 @@ function selectWeatherIcon(data) {
     if (solar > 50) return "images/partly cloudy.png";
     if (temperature <= 15) return "images/cloud.png";
     if (solar > 0) return "images/cloudy.png";
+
     return "images/mist.png";
 }
 
@@ -109,6 +214,7 @@ function computeStatus(rainRate, uv, temp) {
 
 function updateText(id, text) {
     const element = document.getElementById(id);
+
     if (element) {
         element.textContent = text;
     }
@@ -119,27 +225,40 @@ function sanitizeAdviceText(rawText) {
         .replace(/\s+/g, " ")
         .replace(/[*_`#>-]/g, "")
         .trim();
+
     if (!cleaned) return "";
+
     if (isChinese) {
         const firstSentence = cleaned.split(/[。！？]/)[0]?.trim();
         return firstSentence ? `${firstSentence}。` : cleaned.slice(0, 60);
     }
+
     const firstSentence = cleaned.split(/[.!?]/)[0]?.trim();
     return firstSentence ? `${firstSentence}.` : cleaned.slice(0, 140);
 }
 
 function fallbackAdvice() {
     if (!latestCurrentSnapshot) return units.adviceLoading;
-    if (latestCurrentSnapshot.rainRate >= 0.1 || latestCurrentSnapshot.todayRain >= 2) return units.adviceFallbackRain;
-    if (latestCurrentSnapshot.temp >= 30 || latestCurrentSnapshot.uv >= 6) return units.adviceFallbackHeat;
+
+    if (latestCurrentSnapshot.rainRate >= 0.1 || latestCurrentSnapshot.todayRain >= 2) {
+        return units.adviceFallbackRain;
+    }
+
+    if (latestCurrentSnapshot.temp >= 30 || latestCurrentSnapshot.uv >= 6) {
+        return units.adviceFallbackHeat;
+    }
+
     return units.adviceFallbackDry;
 }
 
 function getTodayPointIndex(modeData) {
     if (!modeData) return -1;
+
     const todayLabel = isChinese ? "今天" : "Today";
     const index = modeData.labels.indexOf(todayLabel);
+
     if (index >= 0) return index;
+
     return chartMode === "forecast" ? 0 : modeData.labels.length - 1;
 }
 
@@ -154,30 +273,42 @@ function requestAdviceFromHuggingFace(systemContent, prompt, temperature) {
             max_tokens: isChinese ? 80 : 70
         }),
         cache: "no-store"
-    }).then((response) => {
-        if (!response.ok) {
-            return response.json().then((data) => {
-                throw new Error(data?.error || `${response.status} ${response.statusText}`);
-            });
-        }
-        return response.json();
-    }).then((data) => {
-        if (!data.text?.trim()) {
-            throw new Error("Empty response from AI");
-        }
-        return { text: data.text, model: data.model };
-    });
+    })
+        .then((response) => {
+            if (!response.ok) {
+                return response.json().then((data) => {
+                    throw new Error(data?.error || `${response.status} ${response.statusText}`);
+                });
+            }
+
+            return response.json();
+        })
+        .then((data) => {
+            if (!data.text?.trim()) {
+                throw new Error("Empty response from AI");
+            }
+
+            return {
+                text: data.text,
+                model: data.model
+            };
+        });
 }
 
-function runAiAdviceFetch(askForDifferent) {
+function runAiAdviceFetch(askForDifferent = false) {
     updateText("aiAdviceTitle", units.adviceTitle);
+
     if (!latestCurrentSnapshot || !latestChartSnapshot) {
         updateText("aiAdviceText", fallbackAdvice());
         return;
     }
+
     updateText("aiAdviceText", units.adviceLoading);
 
-    const trendDelta = Number(latestChartSnapshot.highs.at(-1)) - Number(latestChartSnapshot.highs[0]);
+    const firstHigh = Number(latestChartSnapshot.highs[0]);
+    const lastHigh = Number(latestChartSnapshot.highs.at(-1));
+    const trendDelta = Number.isFinite(firstHigh) && Number.isFinite(lastHigh) ? lastHigh - firstHigh : 0;
+
     let prompt = isChinese
         ? `地点深圳。当前${formatNumber(latestCurrentSnapshot.temp)}度，紫外线${formatNumber(latestCurrentSnapshot.uv)}，降雨${formatNumber(latestCurrentSnapshot.rainRate)}毫米/时。今日最高${formatNumber(latestCurrentSnapshot.todayHigh)}度、最低${formatNumber(latestCurrentSnapshot.todayLow)}度，降雨${formatNumber(latestCurrentSnapshot.todayRain)}毫米，温度趋势${formatNumber(trendDelta)}度。请根据这些数据给一句温暖、有情绪、让人开心的建议，可以带一点小表情。`
         : `Location Shenzhen. Current ${formatNumber(latestCurrentSnapshot.temp)}°C, UV ${formatNumber(latestCurrentSnapshot.uv)}, rain ${formatNumber(latestCurrentSnapshot.rainRate)} mm/h. Today's high ${formatNumber(latestCurrentSnapshot.todayHigh)}°C, low ${formatNumber(latestCurrentSnapshot.todayLow)}°C, rain ${formatNumber(latestCurrentSnapshot.todayRain)} mm, trend ${formatNumber(trendDelta)}°C. Give one warm, emotional, delightful piece of advice—you may use a few emojis.`;
@@ -188,14 +319,16 @@ function runAiAdviceFetch(askForDifferent) {
 
     if (askForDifferent) {
         const nonce = Math.random().toString(36).slice(2, 8);
-        prompt += " [ref:" + nonce + "]";
+        prompt += ` [ref:${nonce}]`;
+
         const varyEn = [
             "This time focus your vibe on what to wear or layers.",
             "This time focus on the best time to go out or cozy up.",
             "This time focus on staying hydrated or sun-safe.",
             "This time focus on indoor vs outdoor plans.",
-            "This time focus on staying comfy (cool or warm)."
+            "This time focus on staying comfy, cool, or warm."
         ];
+
         const varyZh = [
             "这次从穿什么、穿几件来给建议。",
             "这次从出门时段或宅家来给建议。",
@@ -203,20 +336,25 @@ function runAiAdviceFetch(askForDifferent) {
             "这次从室内外安排来给建议。",
             "这次从体感凉热、舒适度来给建议。"
         ];
-        const vary = isChinese ? varyZh[Math.floor(Math.random() * varyZh.length)] : varyEn[Math.floor(Math.random() * varyEn.length)];
-        systemContent = (isChinese ? "你是贴心又活泼的天气小助手。用一句简短、有温度的话给建议，可带 1～2 个小表情。" : "You are a warm, cheerful weather buddy. One short, delightful sentence; 1–2 emojis okay.") + " " + vary;
+
+        const vary = isChinese
+            ? varyZh[Math.floor(Math.random() * varyZh.length)]
+            : varyEn[Math.floor(Math.random() * varyEn.length)];
+
+        systemContent = (isChinese
+            ? "你是贴心又活泼的天气小助手。用一句简短、有温度的话给建议，可带 1～2 个小表情。"
+            : "You are a warm, cheerful weather buddy. One short, delightful sentence; 1–2 emojis okay.") + " " + vary;
     }
 
     const refreshBtn = document.getElementById("aiAdviceRefresh");
+
     if (refreshBtn) {
         refreshBtn.disabled = true;
     }
 
     const temperature = askForDifferent ? 1.0 : 0.5;
 
-    const doRequest = requestAdviceFromHuggingFace(systemContent, prompt, temperature).then(({ text }) => ({ text }));
-
-    doRequest
+    requestAdviceFromHuggingFace(systemContent, prompt, temperature)
         .then(({ text }) => {
             const advice = sanitizeAdviceText(text);
             updateText("aiAdviceText", advice || fallbackAdvice());
@@ -224,6 +362,7 @@ function runAiAdviceFetch(askForDifferent) {
         .catch((err) => {
             console.error("AI advice request failed:", err);
             updateText("aiAdviceText", units.adviceError);
+
             setTimeout(() => {
                 updateText("aiAdviceText", fallbackAdvice());
             }, 4000);
@@ -237,10 +376,12 @@ function runAiAdviceFetch(askForDifferent) {
 
 function maybeGenerateAiAdvice() {
     updateText("aiAdviceTitle", units.adviceTitle);
+
     if (!latestCurrentSnapshot || !latestChartSnapshot) return;
 
     const nowMs = Date.now();
     const minRefreshMs = 20 * 60 * 1000;
+
     const adviceSignature = [
         chartMode,
         Math.round(latestCurrentSnapshot.temp),
@@ -257,7 +398,7 @@ function maybeGenerateAiAdvice() {
 
     lastAdviceSignature = adviceSignature;
     lastAdviceAtMs = nowMs;
-    runAiAdviceFetch();
+    runAiAdviceFetch(false);
 }
 
 function updateChartMetaText() {
@@ -267,23 +408,26 @@ function updateChartMetaText() {
     updateText("insightTrendLabel", units.insightTrendLabel);
 
     const toggle = document.getElementById("chartModeToggle");
+
     if (toggle) {
         toggle.textContent = chartMode === "forecast" ? units.chartToggleToHistory : units.chartToggleToForecast;
     }
 }
 
 function updateChartInsights(highs, lows, precipTotals) {
-    const validHighs = highs.filter((v) => Number.isFinite(v));
-    const validLows = lows.filter((v) => Number.isFinite(v));
-    const validRain = precipTotals.filter((v) => Number.isFinite(v));
+    const validHighs = highs.map(Number).filter(Number.isFinite);
+    const validLows = lows.map(Number).filter(Number.isFinite);
+    const validRain = precipTotals.map(Number).filter(Number.isFinite);
 
     const lastHigh = validHighs.at(-1);
     const lastLow = validLows.at(-1);
+
     const dayRange = Number.isFinite(lastHigh) && Number.isFinite(lastLow)
         ? Math.max(0, lastHigh - lastLow)
         : null;
 
     const rainTotal = validRain.reduce((sum, value) => sum + value, 0);
+
     const firstHigh = validHighs[0];
     const trendDelta = Number.isFinite(lastHigh) && Number.isFinite(firstHigh)
         ? lastHigh - firstHigh
@@ -306,6 +450,7 @@ function formatDateForApi(date) {
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
+
     return `${year}-${month}-${day}`;
 }
 
@@ -320,28 +465,29 @@ function getTodayInShanghai() {
     const year = parts.find((part) => part.type === "year")?.value;
     const month = parts.find((part) => part.type === "month")?.value;
     const day = parts.find((part) => part.type === "day")?.value;
+
     return `${year}-${month}-${day}`;
 }
 
 function addDaysToIso(isoDate, dayOffset) {
     const [year, month, day] = isoDate.split("-").map(Number);
     const utcDate = new Date(Date.UTC(year, month - 1, day));
+
     utcDate.setUTCDate(utcDate.getUTCDate() + dayOffset);
+
     return formatDateForApi(utcDate);
 }
 
 function getEcowittHistoryUrl(startDate, endDate) {
     const params = new URLSearchParams({
-        application_key: "38E4E6CBDE53C4D5AB510E4AD693A522",
-        api_key: "547d3f02-e7c4-46d1-bef9-072d402873d8",
-        mac: "60:01:94:23:9D:CB",
-        call_back: "outdoor.temperature,rainfall.daily",
+        call_back: "outdoor.temperature,rainfall.daily,rain.rainrate",
         cycle_type: "5min",
         start_date: `${startDate} 00:00:00`,
         end_date: `${endDate} 23:59:59`,
         temp_unitid: "1",
         rainfall_unitid: "12"
     });
+
     return `${ECOWITT_HISTORY_BASE_URL}?${params.toString()}`;
 }
 
@@ -356,12 +502,88 @@ function toShanghaiIsoDateFromTimestamp(timestampSeconds) {
     const year = parts.find((part) => part.type === "year")?.value;
     const month = parts.find((part) => part.type === "month")?.value;
     const day = parts.find((part) => part.type === "day")?.value;
+
     return `${year}-${month}-${day}`;
 }
 
 function buildLastSevenDatesEndingToday() {
     const today = getTodayInShanghai();
+
     return Array.from({ length: 7 }, (_, index) => addDaysToIso(today, index - 6));
+}
+
+function parseSummaryHistory(json) {
+    const summaries = Array.isArray(json?.summaries) ? json.summaries : [];
+
+    const cleaned = summaries
+        .filter((item) => item?.obsTimeLocal && item?.metric)
+        .slice(-7);
+
+    const dates = cleaned.map((item) => item.obsTimeLocal.slice(0, 10));
+
+    return {
+        dates,
+        labels: buildHistoryLabels(dates),
+        highs: cleaned.map((item) => Number(item.metric?.tempHigh)),
+        lows: cleaned.map((item) => Number(item.metric?.tempLow)),
+        precipTotals: cleaned.map((item) => Number(item.metric?.precipTotal ?? 0))
+    };
+}
+
+function parseEcowittListHistory(json, dates) {
+    const tempList = json?.data?.outdoor?.temperature?.list || {};
+    const rainDailyList = json?.data?.rainfall?.daily?.list || {};
+    const rainRateList = json?.data?.rain?.rainrate?.list || json?.data?.rainfall?.rain_rate?.list || {};
+
+    const byDate = new Map(dates.map((date) => [
+        date,
+        {
+            high: null,
+            low: null,
+            rain: 0
+        }
+    ]));
+
+    Object.entries(tempList).forEach(([ts, value]) => {
+        const date = toShanghaiIsoDateFromTimestamp(ts);
+        const day = byDate.get(date);
+        const numeric = Number(value);
+
+        if (!day || !Number.isFinite(numeric)) return;
+
+        day.high = day.high === null ? numeric : Math.max(day.high, numeric);
+        day.low = day.low === null ? numeric : Math.min(day.low, numeric);
+    });
+
+    Object.entries(rainDailyList).forEach(([ts, value]) => {
+        const date = toShanghaiIsoDateFromTimestamp(ts);
+        const day = byDate.get(date);
+        const numeric = Number(value);
+
+        if (!day || !Number.isFinite(numeric)) return;
+
+        day.rain = Math.max(day.rain, numeric);
+    });
+
+    if (Object.keys(rainDailyList).length === 0) {
+        Object.entries(rainRateList).forEach(([ts, value]) => {
+            const date = toShanghaiIsoDateFromTimestamp(ts);
+            const day = byDate.get(date);
+            const numeric = Number(value);
+
+            if (!day || !Number.isFinite(numeric)) return;
+
+            day.rain += numeric;
+        });
+    }
+
+    return {
+        dates,
+        labels: buildHistoryLabels(dates),
+        highs: dates.map((date) => byDate.get(date)?.high),
+        lows: dates.map((date) => byDate.get(date)?.low),
+        precipTotals: dates.map((date) => byDate.get(date)?.rain ?? 0)
+    };
 }
 
 function fetchEcowittHistorySeries() {
@@ -373,55 +595,31 @@ function fetchEcowittHistorySeries() {
     return fetch(url)
         .then((response) => response.json())
         .then((json) => {
+            if (Array.isArray(json?.summaries)) {
+                return parseSummaryHistory(json);
+            }
+
             if (json?.code !== 0) {
                 throw new Error(json?.msg || "history_failed");
             }
 
-            const tempList = json?.data?.outdoor?.temperature?.list || {};
-            const rainList = json?.data?.rainfall?.daily?.list || {};
-            const byDate = new Map(dates.map((date) => [
-                date,
-                { high: null, low: null, rain: 0 }
-            ]));
-
-            Object.entries(tempList).forEach(([ts, value]) => {
-                const date = toShanghaiIsoDateFromTimestamp(ts);
-                const day = byDate.get(date);
-                const numeric = Number(value);
-                if (!day || !Number.isFinite(numeric)) return;
-
-                day.high = day.high === null ? numeric : Math.max(day.high, numeric);
-                day.low = day.low === null ? numeric : Math.min(day.low, numeric);
-            });
-
-            Object.entries(rainList).forEach(([ts, value]) => {
-                const date = toShanghaiIsoDateFromTimestamp(ts);
-                const day = byDate.get(date);
-                const numeric = Number(value);
-                if (!day || !Number.isFinite(numeric)) return;
-                day.rain = Math.max(day.rain, numeric);
-            });
-
-            return {
-                dates,
-                labels: buildHistoryLabels(dates),
-                highs: dates.map((date) => byDate.get(date)?.high),
-                lows: dates.map((date) => byDate.get(date)?.low),
-                precipTotals: dates.map((date) => byDate.get(date)?.rain ?? 0)
-            };
+            return parseEcowittListHistory(json, dates);
         });
 }
 
 function toggleMetricAlert(valueId, isAlert) {
     const valueNode = document.getElementById(valueId);
     const card = valueNode?.closest(".metric-card");
+
     if (!card) return;
+
     card.classList.toggle("is-alert", Boolean(isAlert));
 }
 
 function applyAtmosphereTheme({ rainRate, solar, temp }) {
     const nowHour = new Date().getHours();
     const isNight = solar <= 0 || nowHour >= 19 || nowHour <= 6;
+
     let weatherType = "cloudy";
 
     if (rainRate > 0.1) {
@@ -440,17 +638,17 @@ function updateCurrentWeather() {
     fetch(API_URL)
         .then((response) => response.json())
         .then((json) => {
-            const data = json?.data || {};
+            const data = json?.data || json || {};
 
-            const temp = Number(getValue(data.outdoor?.temperature));
-            const feelsLike = Number(getValue(data.outdoor?.feels_like));
-            const humidity = Number(getValue(data.outdoor?.humidity));
-            const windSpeed = Number(getValue(data.wind?.wind_speed));
-            const windGust = Number(getValue(data.wind?.wind_gust));
-            const windDirection = Number(getValue(data.wind?.wind_direction));
-            const solar = Number(getValue(data.solar_and_uvi?.solar));
-            const uv = Number(getValue(data.solar_and_uvi?.uvi));
-            const rainRate = Number(getValue(data.rainfall?.rain_rate));
+            const temp = getTemperature(data);
+            const feelsLike = getFeelsLike(data);
+            const humidity = getHumidity(data);
+            const windSpeed = getWindSpeed(data);
+            const windGust = getWindGust(data);
+            const windDirection = getWindDirection(data);
+            const solar = getSolar(data);
+            const uv = getUv(data);
+            const rainRate = getRainRate(data);
 
             const icon = document.querySelector(".weather-icon");
             const temperatureNode = document.querySelector(".temperature");
@@ -482,11 +680,17 @@ function updateCurrentWeather() {
             if (!latestCurrentSnapshot) {
                 latestCurrentSnapshot = {};
             }
+
             latestCurrentSnapshot.temp = temp;
             latestCurrentSnapshot.uv = uv;
             latestCurrentSnapshot.rainRate = rainRate;
 
-            applyAtmosphereTheme({ rainRate, solar, temp });
+            applyAtmosphereTheme({
+                rainRate,
+                solar,
+                temp
+            });
+
             toggleMetricAlert("uvValue", uv >= 7);
             toggleMetricAlert("windSpeedValue", windSpeed * 3.6 >= 25);
             toggleMetricAlert("windGustValue", windGust * 3.6 >= 35);
@@ -495,7 +699,8 @@ function updateCurrentWeather() {
             maybeGenerateAiAdvice();
             revealDashboardOnce();
         })
-        .catch(() => {
+        .catch((err) => {
+            console.error("Current weather request failed:", err);
             updateText("weatherStatus", isChinese ? "实时数据加载失败" : "Could not load live data");
             document.body.dataset.weather = "cloudy";
             revealDashboardOnce();
@@ -504,27 +709,34 @@ function updateCurrentWeather() {
 
 function renderHistoryChart(labels, highs, lows, precipTotals) {
     const chartElement = document.getElementById("myChart");
+
     if (!chartElement) return;
 
     const ctx = chartElement.getContext("2d");
+
     if (!ctx) return;
 
     const highLabel = units.highLabel;
     const lowLabel = units.lowLabel;
     const precipLabel = units.precipLabel;
+
     const highGradient = ctx.createLinearGradient(0, 0, 0, 320);
     highGradient.addColorStop(0, "rgba(241, 91, 108, 0.28)");
     highGradient.addColorStop(1, "rgba(241, 91, 108, 0)");
+
     const lowGradient = ctx.createLinearGradient(0, 0, 0, 320);
     lowGradient.addColorStop(0, "rgba(38, 128, 235, 0.22)");
     lowGradient.addColorStop(1, "rgba(38, 128, 235, 0)");
+
     const rainGradient = ctx.createLinearGradient(0, 0, 0, 320);
     rainGradient.addColorStop(0, "rgba(0, 163, 138, 0.35)");
     rainGradient.addColorStop(1, "rgba(0, 163, 138, 0.02)");
+
     const maxRainValue = precipTotals.reduce((max, value) => {
         const numeric = Number(value);
         return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
     }, 0);
+
     const rainAxisMax = Math.max(10, Math.ceil(maxRainValue + 1));
 
     if (!trendChart) {
@@ -602,25 +814,39 @@ function renderHistoryChart(labels, highs, lows, precipTotals) {
                 },
                 scales: {
                     x: {
-                        grid: { color: "rgba(15, 76, 117, 0.08)" },
-                        ticks: { color: "#627786", maxRotation: 0 }
+                        grid: {
+                            color: "rgba(15, 76, 117, 0.08)"
+                        },
+                        ticks: {
+                            color: "#627786",
+                            maxRotation: 0
+                        }
                     },
                     yTemp: {
                         beginAtZero: false,
                         position: "left",
-                        grid: { color: "rgba(15, 76, 117, 0.08)" },
-                        ticks: { color: "#627786" }
+                        grid: {
+                            color: "rgba(15, 76, 117, 0.08)"
+                        },
+                        ticks: {
+                            color: "#627786"
+                        }
                     },
                     yRain: {
                         beginAtZero: true,
                         max: rainAxisMax,
                         position: "right",
-                        grid: { drawOnChartArea: false },
-                        ticks: { color: "#627786" }
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            color: "#627786"
+                        }
                     }
                 }
             }
         });
+
         return;
     }
 
@@ -628,9 +854,11 @@ function renderHistoryChart(labels, highs, lows, precipTotals) {
     trendChart.data.datasets[0].data = highs;
     trendChart.data.datasets[1].data = lows;
     trendChart.data.datasets[2].data = precipTotals;
+
     if (trendChart.options?.scales?.yRain) {
         trendChart.options.scales.yRain.max = rainAxisMax;
     }
+
     trendChart.update("none");
 }
 
@@ -655,13 +883,17 @@ function buildForecastLabels(dates) {
 
 function buildHistoryLabels(dates) {
     const todayStr = getTodayInShanghai();
+
     return dates.map((dateStr) => {
         if (dateStr === todayStr) {
             return isChinese ? "今天" : "Today";
         }
-        const dateObj = new Date(dateStr);
+
+        const dateObj = new Date(`${dateStr}T00:00:00+08:00`);
+
         return dateObj.toLocaleDateString(isChinese ? "zh-CN" : "en-US", {
-            weekday: "short"
+            weekday: "short",
+            timeZone: "Asia/Shanghai"
         });
     });
 }
@@ -672,6 +904,7 @@ function fetchDailySeries(url, labelBuilder) {
         .then((data) => {
             const daily = data?.daily || {};
             const dates = Array.isArray(daily.time) ? daily.time : [];
+
             return {
                 dates,
                 labels: labelBuilder(dates),
@@ -684,13 +917,17 @@ function fetchDailySeries(url, labelBuilder) {
 
 function renderModeData(modeData) {
     latestChartSnapshot = modeData;
+
     const todayIndex = getTodayPointIndex(modeData);
+
     if (todayIndex >= 0) {
         if (!latestCurrentSnapshot) latestCurrentSnapshot = {};
+
         latestCurrentSnapshot.todayHigh = Number(modeData.highs[todayIndex]);
         latestCurrentSnapshot.todayLow = Number(modeData.lows[todayIndex]);
         latestCurrentSnapshot.todayRain = Number(modeData.precipTotals[todayIndex]);
     }
+
     renderHistoryChart(modeData.labels, modeData.highs, modeData.lows, modeData.precipTotals);
     updateChartInsights(modeData.highs, modeData.lows, modeData.precipTotals);
     maybeGenerateAiAdvice();
@@ -699,6 +936,7 @@ function renderModeData(modeData) {
 function loadChartModeData() {
     const activeMode = chartMode;
     const cachedData = chartDataCache[activeMode];
+
     if (cachedData) {
         renderModeData(cachedData);
         return;
@@ -711,10 +949,14 @@ function loadChartModeData() {
     request
         .then((modeData) => {
             chartDataCache[activeMode] = modeData;
+
             if (chartMode !== activeMode) return;
+
             renderModeData(modeData);
         })
-        .catch(() => {
+        .catch((err) => {
+            console.error("Chart data request failed:", err);
+
             updateText("weatherStatus", activeMode === "forecast" ? units.forecastUnavailable : units.historyUnavailable);
             updateText("insightRangeValue", "--");
             updateText("insightRainValue", "--");
@@ -724,6 +966,7 @@ function loadChartModeData() {
 
 function setupChartModeToggle() {
     const toggle = document.getElementById("chartModeToggle");
+
     if (!toggle) return;
 
     toggle.addEventListener("click", () => {
@@ -740,8 +983,11 @@ function refreshCurrentChartModeData() {
 
 function setupAdviceRefreshButton() {
     const btn = document.getElementById("aiAdviceRefresh");
+
     if (!btn) return;
+
     btn.textContent = units.adviceRefreshButton;
+
     btn.addEventListener("click", () => {
         lastAdviceSignature = "";
         lastAdviceAtMs = 0;
@@ -754,5 +1000,6 @@ setupChartModeToggle();
 setupAdviceRefreshButton();
 updateCurrentWeather();
 loadChartModeData();
+
 setInterval(updateCurrentWeather, 10000);
 setInterval(refreshCurrentChartModeData, 6 * 60 * 60 * 1000);
