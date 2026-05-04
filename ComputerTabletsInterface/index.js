@@ -120,10 +120,14 @@ function getNumber(data, paths, fallback = NaN) {
 }
 
 function normalizeCurrentData(json) {
-    console.log("LIVE ECOWITT RESPONSE:", json);
+    console.log("LIVE WEATHER RESPONSE:", json);
 
     if (typeof json?.code !== "undefined" && Number(json.code) !== 0) {
         throw new Error(json?.msg || "Live weather API failed");
+    }
+
+    if (Array.isArray(json?.summaries) && json.summaries.length > 0) {
+        return json.summaries[json.summaries.length - 1];
     }
 
     if (json?.data && typeof json.data === "object" && !Array.isArray(json.data)) {
@@ -139,12 +143,24 @@ function normalizeCurrentData(json) {
 
 function getRainRate(data) {
     return getNumber(data, [
+        "metric.precipRate",
+        "precipRate",
         "rainfall.rain_rate",
         "rainfall.rainrate",
         "rainfall.rate",
-        "rain.rainrate",
-        "rain.rain_rate",
-        "rain.rate"
+        "rain.rate",
+        "rain.rain_rate"
+    ], 0);
+}
+
+function getRainTotal(data) {
+    return getNumber(data, [
+        "metric.precipTotal",
+        "precipTotal",
+        "rainfall.daily",
+        "rainfall.event",
+        "rainfall.total",
+        "rain.total"
     ], 0);
 }
 
@@ -152,8 +168,11 @@ function getTemperature(data) {
     return getNumber(data, [
         "outdoor.temperature",
         "outdoor.temp",
+        "metric.tempAvg",
+        "metric.tempHigh",
         "temperature",
-        "temp"
+        "temp",
+        "tempAvg"
     ]);
 }
 
@@ -163,6 +182,8 @@ function getFeelsLike(data) {
         "outdoor.feelsLike",
         "outdoor.app_temp",
         "outdoor.appTemp",
+        "metric.heatindexAvg",
+        "metric.windchillAvg",
         "feels_like",
         "feelsLike",
         "app_temp"
@@ -172,7 +193,8 @@ function getFeelsLike(data) {
 function getHumidity(data) {
     return getNumber(data, [
         "outdoor.humidity",
-        "humidity"
+        "humidity",
+        "humidityAvg"
     ]);
 }
 
@@ -181,8 +203,10 @@ function getWindSpeed(data) {
         "wind.wind_speed",
         "wind.windspeed",
         "wind.speed",
+        "metric.windspeedAvg",
         "wind_speed",
-        "windspeed"
+        "windspeed",
+        "windspeedAvg"
     ], 0);
 }
 
@@ -191,8 +215,11 @@ function getWindGust(data) {
         "wind.wind_gust",
         "wind.windgust",
         "wind.gust",
+        "metric.windgustAvg",
+        "metric.windgustHigh",
         "wind_gust",
-        "windgust"
+        "windgust",
+        "windgustAvg"
     ], 0);
 }
 
@@ -201,6 +228,7 @@ function getWindDirection(data) {
         "wind.wind_direction",
         "wind.winddir",
         "wind.direction",
+        "winddirAvg",
         "wind_direction",
         "winddir"
     ]);
@@ -211,6 +239,7 @@ function getSolar(data) {
         "solar_and_uvi.solar",
         "solar_and_uvi.solarRadiation",
         "solar.solar",
+        "solarRadiationHigh",
         "solarRadiation",
         "solar"
     ], 0);
@@ -220,6 +249,7 @@ function getUv(data) {
     return getNumber(data, [
         "solar_and_uvi.uvi",
         "solar_and_uvi.uv",
+        "uvHigh",
         "uv",
         "uvi"
     ], 0);
@@ -580,6 +610,24 @@ function buildLastSevenDatesEndingToday() {
     return Array.from({ length: 7 }, (_, index) => addDaysToIso(today, index - 6));
 }
 
+function parseSummaryHistory(json) {
+    const summaries = Array.isArray(json?.summaries) ? json.summaries : [];
+
+    const cleaned = summaries
+        .filter((item) => item?.obsTimeLocal && item?.metric)
+        .slice(-7);
+
+    const dates = cleaned.map((item) => item.obsTimeLocal.slice(0, 10));
+
+    return {
+        dates,
+        labels: buildHistoryLabels(dates),
+        highs: cleaned.map((item) => Number(item.metric?.tempHigh)),
+        lows: cleaned.map((item) => Number(item.metric?.tempLow)),
+        precipTotals: cleaned.map((item) => Number(item.metric?.precipTotal ?? 0))
+    };
+}
+
 function fetchEcowittHistorySeries() {
     const dates = buildLastSevenDatesEndingToday();
     const startDate = dates[0];
@@ -589,6 +637,10 @@ function fetchEcowittHistorySeries() {
     return fetch(url)
         .then((response) => response.json())
         .then((json) => {
+            if (Array.isArray(json?.summaries)) {
+                return parseSummaryHistory(json);
+            }
+
             if (json?.code !== 0) {
                 throw new Error(json?.msg || "history_failed");
             }
@@ -708,7 +760,8 @@ function updateCurrentWeather() {
                 windDirection: getWindDirection(data),
                 solar: getSolar(data),
                 uv: getUv(data),
-                rainRate: getRainRate(data)
+                rainRate: getRainRate(data),
+                rainTotal: getRainTotal(data)
             };
 
             console.log("PARSED LIVE WEATHER:", snapshot);
@@ -734,8 +787,8 @@ function updateCurrentWeather() {
             }
 
             updateText("humidityValue", `${formatNumber(snapshot.humidity, 0)}%`);
-            updateText("windSpeedValue", `${formatNumber(snapshot.windSpeed * 3.6)} km/h`);
-            updateText("windGustValue", `${formatNumber(snapshot.windGust * 3.6)} km/h`);
+            updateText("windSpeedValue", `${formatNumber(snapshot.windSpeed)} km/h`);
+            updateText("windGustValue", `${formatNumber(snapshot.windGust)} km/h`);
             updateText("solarValue", `${formatNumber(snapshot.solar, 0)} W/m²`);
             updateText("uvValue", formatNumber(snapshot.uv, 1));
             updateText("windDirectionValue", degreesToCompass(snapshot.windDirection));
@@ -752,6 +805,10 @@ function updateCurrentWeather() {
             latestCurrentSnapshot.uv = snapshot.uv;
             latestCurrentSnapshot.rainRate = snapshot.rainRate;
 
+            if (Number.isFinite(snapshot.rainTotal)) {
+                latestCurrentSnapshot.todayRain = snapshot.rainTotal;
+            }
+
             applyAtmosphereTheme({
                 rainRate: snapshot.rainRate,
                 solar: snapshot.solar,
@@ -759,8 +816,8 @@ function updateCurrentWeather() {
             });
 
             toggleMetricAlert("uvValue", snapshot.uv >= 7);
-            toggleMetricAlert("windSpeedValue", snapshot.windSpeed * 3.6 >= 25);
-            toggleMetricAlert("windGustValue", snapshot.windGust * 3.6 >= 35);
+            toggleMetricAlert("windSpeedValue", snapshot.windSpeed >= 25);
+            toggleMetricAlert("windGustValue", snapshot.windGust >= 35);
             toggleMetricAlert("rainRateValue", snapshot.rainRate >= 8);
 
             maybeGenerateAiAdvice();
