@@ -1,6 +1,33 @@
-const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
-const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
+const ECOWITT_APPLICATION_KEY = "38E4E6CBDE53C4D5AB510E4AD693A522";
+const ECOWITT_API_KEY = "547d3f02-e7c4-46d1-bef9-072d402873d8";
+const ECOWITT_MAC = "60:01:94:23:9D:CB";
+
+const ECOWITT_REALTIME_BASE_URL = "https://api.ecowitt.net/api/v3/device/real_time";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
+
+const API_URL = `${ECOWITT_REALTIME_BASE_URL}?${new URLSearchParams({
+    application_key: ECOWITT_APPLICATION_KEY,
+    api_key: ECOWITT_API_KEY,
+    mac: ECOWITT_MAC,
+    call_back: [
+        "outdoor.temperature",
+        "outdoor.feels_like",
+        "outdoor.humidity",
+        "wind.wind_speed",
+        "wind.wind_gust",
+        "wind.wind_direction",
+        "solar_and_uvi.solar",
+        "solar_and_uvi.uvi",
+        "rain.rainrate",
+        "rainfall.rain_rate"
+    ].join(","),
+    temp_unitid: "1",
+    pressure_unitid: "3",
+    wind_speed_unitid: "6",
+    rainfall_unitid: "12"
+}).toString()}`;
+
+const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
 const HF_ADVICE_PROXY_URL = "/api/hf-advice";
 
 const isChinese = window.location.pathname.includes("index_cn");
@@ -529,9 +556,9 @@ function addDaysToIso(isoDate, dayOffset) {
 
 function getEcowittHistoryUrl(startDate, endDate) {
     const params = new URLSearchParams({
-        application_key: "38E4E6CBDE53C4D5AB510E4AD693A522",
-        api_key: "547d3f02-e7c4-46d1-bef9-072d402873d8",
-        mac: "60:01:94:23:9D:CB",
+        application_key: ECOWITT_APPLICATION_KEY,
+        api_key: ECOWITT_API_KEY,
+        mac: ECOWITT_MAC,
         call_back: "outdoor.temperature,rainfall.daily",
         cycle_type: "5min",
         start_date: `${startDate} 00:00:00`,
