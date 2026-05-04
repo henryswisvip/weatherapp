@@ -60,26 +60,7 @@ function revealDashboardOnce() {
 }
 
 function getValue(node, fallback = "--") {
-    if (typeof node?.value !== "undefined") {
-        return node.value;
-    }
-
-    if (typeof node !== "undefined" && node !== null) {
-        return node;
-    }
-
-    return fallback;
-}
-
-function getRainRate(data) {
-    return Number(getValue(
-        data.metric?.precipRate ??
-        data.precipRate ??
-        data.rainfall?.rain_rate ??
-        data.rainfall?.rainrate ??
-        data.rainfall?.rate,
-        0
-    ));
+    return typeof node?.value !== "undefined" ? node.value : fallback;
 }
 
 function formatNumber(value, digits = 1) {
@@ -103,9 +84,9 @@ function degreesToCompass(degrees) {
 function selectWeatherIcon(data) {
     const temperature = Number(getValue(data.outdoor?.temperature));
     const solar = Number(getValue(data.solar_and_uvi?.solar));
-    const rainRate = getRainRate(data);
+    const rainRate = Number(getValue(data.rainfall?.rain_rate));
 
-    if (rainRate > 50) return "images/heavy rain.png";
+    if (rainRate > 50) return "images/heavy rain .png";
     if (rainRate > 10 && solar > 50) return "images/small rain.png";
     if (rainRate > 10) return "images/rain.png";
     if (rainRate > 0) return "images/drizzle.png";
@@ -469,7 +450,7 @@ function updateCurrentWeather() {
             const windDirection = Number(getValue(data.wind?.wind_direction));
             const solar = Number(getValue(data.solar_and_uvi?.solar));
             const uv = Number(getValue(data.solar_and_uvi?.uvi));
-            const rainRate = getRainRate(data);
+            const rainRate = Number(getValue(data.rainfall?.rain_rate));
 
             const icon = document.querySelector(".weather-icon");
             const temperatureNode = document.querySelector(".temperature");
