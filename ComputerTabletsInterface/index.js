@@ -48,25 +48,35 @@ function fetchCurrentWeatherData() {
             const UV = document.querySelector('.radiation .UV span');
             const winddir = document.querySelector('.windd .winddir span');
             const windChill = document.querySelector('.windd .windChill span');
+
+            const rainRateValue = parseFloat(
+                data.rainfall?.rain_rate?.value ??
+                data.rainfall?.rainrate?.value ??
+                data.rainfall?.rate?.value ??
+                data.metric?.precipRate ??
+                data.precipRate ??
+                0
+            );
+
             switch (true) {
 
-                case data.rainfall.rain_rate.value > 50:
+                case rainRateValue > 50:
                     image.src = 'images/heavy rain .png';
                     break;
-                case data.solar_and_uvi.solar.value > 50 && data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
+                case data.solar_and_uvi.solar.value > 50 && rainRateValue > 10 && rainRateValue < 50:
                     image.src = 'images/small rain.png';
                     break;
-                case data.rainfall.rain_rate.value > 10 && data.rainfall.rain_rate.value < 50:
+                case rainRateValue > 10 && rainRateValue < 50:
                     image.src = 'images/rain.png';
                     break;
 
-                case data.rainfall.rain_rate.value < 10 && data.rainfall.rain_rate.value > 0:
+                case rainRateValue < 10 && rainRateValue > 0:
                     image.src = 'images/drizzle.png';
                     break;
-                case data.solar_and_uvi.solar.value < 50 && data.rainfall.rain_rate.value == 0 && data.solar_and_uvi.solar.value != 0 && data.outdoor.temperature.value < 34 :
+                case data.solar_and_uvi.solar.value < 50 && rainRateValue == 0 && data.solar_and_uvi.solar.value != 0 && data.outdoor.temperature.value < 34:
                     image.src = 'images/cloudy.png';
                     break;
-                case data.solar_and_uvi.solar.value > 50 && data.solar_and_uvi.solar.value < 100 && data.rainfall.rain_rate.value == 0:
+                case data.solar_and_uvi.solar.value > 50 && data.solar_and_uvi.solar.value < 100 && rainRateValue == 0:
                     image.src = 'images/partly cloudy.png';
                     break;
                 case data.outdoor.temperature.value > 5 && data.outdoor.temperature.value <= 15:
@@ -76,8 +86,8 @@ function fetchCurrentWeatherData() {
                     image.src = 'images/hot.png';
                     break;
                 case data.solar_and_uvi.solar.value == 0:
-                        image.src = 'images/moon.png';
-                        break;
+                    image.src = 'images/moon.png';
+                    break;
                 case data.solar_and_uvi.solar.value > 100:
                     image.src = 'images/clear.png';
                     break;
@@ -98,16 +108,16 @@ function fetchCurrentWeatherData() {
                     break;
             }
 
-        
-            
+
+
             temperature.innerHTML = `${data.outdoor.temperature.value}<span>°C</span>`;
-            
-            
-            
+
+
+
             if (window.location.pathname.includes("/index_cn")) {
-            description.innerHTML = `体感温度: ${data.outdoor.feels_like.value}<span>℃</span>`;
+                description.innerHTML = `体感温度: ${data.outdoor.feels_like.value}<span>℃</span>`;
             } else {
-            description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
+                description.innerHTML = `Feels Like: ${data.outdoor.feels_like.value}<span>°C</span>`;
             }
 
             humidity.innerHTML = `${data.outdoor.humidity.value}%`;
@@ -115,11 +125,10 @@ function fetchCurrentWeatherData() {
             solarRadiation.innerHTML = `${data.solar_and_uvi.solar.value} W/m²`;
             UV.innerHTML = `${data.solar_and_uvi.uvi.value}`;
             winddir.innerHTML = `${degreesToCompass(data.wind.wind_direction.value)}`;
-            const rainRateValue = parseFloat(data.rainfall.rain_rate.value);
             windChill.innerHTML = `${rainRateValue.toFixed(1)} mm/hr`;
-        
 
-            
+
+
             // Show weather data
             weatherBox.style.display = '';
             weatherDetails.style.display = '';
