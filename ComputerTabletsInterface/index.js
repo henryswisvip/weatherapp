@@ -13,6 +13,7 @@ const units = {
     cool: isChinese ? "天气偏凉" : "Cool weather",
     stable: isChinese ? "天气平稳" : "Stable conditions",
     unavailable: isChinese ? "暂不可用" : "Unavailable",
+    liveUnavailable: isChinese ? "实时数据暂不可用" : "Live data unavailable",
     chartTitleForecast: isChinese ? "未来 7 天预报" : "7-Day Forecast",
     chartTitleHistory: isChinese ? "过去 7 天历史" : "Last 7 Days History",
     chartToggleToHistory: isChinese ? "查看过去 7 天" : "Show Last 7 Days",
@@ -75,11 +76,19 @@ function getValue(node, fallback = "--") {
     return fallback;
 }
 
-function getFirstValue(possibleNodes, fallback = "--") {
-    for (const node of possibleNodes) {
-        const value = getValue(node, undefined);
+function getByPath(obj, path) {
+    return path.split(".").reduce((current, key) => {
+        if (current === null || typeof current === "undefined") return undefined;
+        return current[key];
+    }, obj);
+}
 
-        if (typeof value !== "undefined" && value !== null && value !== "--") {
+function getFirstValue(data, paths, fallback = "--") {
+    for (const path of paths) {
+        const raw = getByPath(data, path);
+        const value = getValue(raw, undefined);
+
+        if (typeof value !== "undefined" && value !== null && value !== "--" && value !== "") {
             return value;
         }
     }
@@ -87,84 +96,123 @@ function getFirstValue(possibleNodes, fallback = "--") {
     return fallback;
 }
 
+function getNumber(data, paths, fallback = NaN) {
+    const value = getFirstValue(data, paths, fallback);
+    const number = Number(value);
+
+    return Number.isFinite(number) ? number : fallback;
+}
+
+function normalizeCurrentData(json) {
+    console.log("LIVE ECOWITT RESPONSE:", json);
+
+    if (typeof json?.code !== "undefined" && Number(json.code) !== 0) {
+        throw new Error(json?.msg || "Live weather API failed");
+    }
+
+    if (json?.data && typeof json.data === "object") {
+        return json.data;
+    }
+
+    if (json && typeof json === "object") {
+        return json;
+    }
+
+    throw new Error("No usable live weather data");
+}
+
 function getRainRate(data) {
-    return Number(getFirstValue([
-        data.rain?.rainrate,
-        data.rain?.rain_rate,
-        data.rain?.rate,
-        data.rainfall?.rain_rate,
-        data.rainfall?.rainrate,
-        data.rainfall?.rate
-    ], 0));
+    return getNumber(data, [
+        "rain.rainrate",
+        "rain.rain_rate",
+        "rain.rate",
+        "rainfall.rain_rate",
+        "rainfall.rainrate",
+        "rainfall.rate"
+    ], 0);
 }
 
 function getTemperature(data) {
-    return Number(getFirstValue([
-        data.outdoor?.temperature,
-        data.temperature,
-        data.temp
-    ], NaN));
+    return getNumber(data, [
+        "outdoor.temperature",
+        "outdoor.temp",
+        "temperature",
+        "temp"
+    ]);
 }
 
 function getFeelsLike(data) {
-    return Number(getFirstValue([
-        data.outdoor?.feels_like,
-        data.outdoor?.feelsLike,
-        data.feels_like,
-        data.feelsLike
-    ], NaN));
+    return getNumber(data, [
+        "outdoor.feels_like",
+        "outdoor.feelsLike",
+        "outdoor.app_temp",
+        "outdoor.appTemp",
+        "feels_like",
+        "feelsLike",
+        "app_temp"
+    ]);
 }
 
 function getHumidity(data) {
-    return Number(getFirstValue([
-        data.outdoor?.humidity,
-        data.humidity
-    ], NaN));
+    return getNumber(data, [
+        "outdoor.humidity",
+        "humidity"
+    ]);
 }
 
 function getWindSpeed(data) {
-    return Number(getFirstValue([
-        data.wind?.wind_speed,
-        data.wind?.windspeed,
-        data.wind_speed,
-        data.windspeed
-    ], 0));
+    return getNumber(data, [
+        "wind.wind_speed",
+        "wind.windspeed",
+        "wind.speed",
+        "wind_speed",
+        "windspeed"
+    ], 0);
 }
 
 function getWindGust(data) {
-    return Number(getFirstValue([
-        data.wind?.wind_gust,
-        data.wind?.windgust,
-        data.wind_gust,
-        data.windgust
-    ], 0));
+    return getNumber(data, [
+        "wind.wind_gust",
+        "wind.windgust",
+        "wind.gust",
+        "wind_gust",
+        "windgust"
+    ], 0);
 }
 
 function getWindDirection(data) {
-    return Number(getFirstValue([
-        data.wind?.wind_direction,
-        data.wind?.winddir,
-        data.wind_direction,
-        data.winddir
-    ], NaN));
+    return getNumber(data, [
+        "wind.wind_direction",
+        "wind.winddir",
+        "wind.direction",
+        "wind_direction",
+        "winddir"
+    ]);
 }
 
 function getSolar(data) {
-    return Number(getFirstValue([
-        data.solar_and_uvi?.solar,
-        data.solar?.solar,
-        data.solarRadiation,
-        data.solar
-    ], 0));
+    return getNumber(data, [
+        "solar_and_uvi.solar",
+        "solar_and_uvi.solarRadiation",
+        "solar.solar",
+        "solarRadiation",
+        "solar"
+    ], 0);
 }
 
 function getUv(data) {
-    return Number(getFirstValue([
-        data.solar_and_uvi?.uvi,
-        data.solar_and_uvi?.uv,
-        data.uv,
-        data.uvi
-    ], 0));
+    return getNumber(data, [
+        "solar_and_uvi.uvi",
+        "solar_and_uvi.uv",
+        "uv",
+        "uvi"
+    ], 0);
+}
+
+function hasUsableLiveData(snapshot) {
+    return Number.isFinite(snapshot.temp) ||
+        Number.isFinite(snapshot.humidity) ||
+        Number.isFinite(snapshot.feelsLike);
 }
 
 function formatNumber(value, digits = 1) {
@@ -206,6 +254,7 @@ function selectWeatherIcon(data) {
 }
 
 function computeStatus(rainRate, uv, temp) {
+    if (!Number.isFinite(temp)) return units.liveUnavailable;
     if (rainRate > 0) return units.rainy;
     if (uv >= 6 && temp >= 26) return units.sunny;
     if (temp <= 16) return units.cool;
@@ -298,7 +347,7 @@ function requestAdviceFromHuggingFace(systemContent, prompt, temperature) {
 function runAiAdviceFetch(askForDifferent = false) {
     updateText("aiAdviceTitle", units.adviceTitle);
 
-    if (!latestCurrentSnapshot || !latestChartSnapshot) {
+    if (!latestCurrentSnapshot || !latestChartSnapshot || !Number.isFinite(latestCurrentSnapshot.temp)) {
         updateText("aiAdviceText", fallbackAdvice());
         return;
     }
@@ -377,7 +426,7 @@ function runAiAdviceFetch(askForDifferent = false) {
 function maybeGenerateAiAdvice() {
     updateText("aiAdviceTitle", units.adviceTitle);
 
-    if (!latestCurrentSnapshot || !latestChartSnapshot) return;
+    if (!latestCurrentSnapshot || !latestChartSnapshot || !Number.isFinite(latestCurrentSnapshot.temp)) return;
 
     const nowMs = Date.now();
     const minRefreshMs = 20 * 60 * 1000;
@@ -597,21 +646,60 @@ function applyAtmosphereTheme({ rainRate, solar, temp }) {
     document.body.dataset.weather = weatherType;
 }
 
+function showLiveUnavailable() {
+    const icon = document.querySelector(".weather-icon");
+    const temperatureNode = document.querySelector(".temperature");
+    const descriptionNode = document.querySelector(".description");
+
+    if (icon) {
+        icon.src = "images/mist.png";
+    }
+
+    if (temperatureNode) {
+        temperatureNode.innerHTML = `--<span>°C</span>`;
+    }
+
+    if (descriptionNode) {
+        descriptionNode.textContent = `${units.feelsLike}--°C`;
+    }
+
+    updateText("humidityValue", "--%");
+    updateText("windSpeedValue", "-- km/h");
+    updateText("windGustValue", "-- km/h");
+    updateText("solarValue", "-- W/m²");
+    updateText("uvValue", "--");
+    updateText("windDirectionValue", units.unavailable);
+    updateText("rainRateValue", "-- mm/h");
+    updateText("feelsLikeValue", "--°C");
+    updateText("weatherStatus", units.liveUnavailable);
+    updateText("lastUpdated", `${units.updated}${new Date().toLocaleTimeString(isChinese ? "zh-CN" : "en-US")}`);
+
+    document.body.dataset.weather = "cloudy";
+}
+
 function updateCurrentWeather() {
     fetch(API_URL)
         .then((response) => response.json())
         .then((json) => {
-            const data = json?.data || {};
+            const data = normalizeCurrentData(json);
 
-            const temp = getTemperature(data);
-            const feelsLike = getFeelsLike(data);
-            const humidity = getHumidity(data);
-            const windSpeed = getWindSpeed(data);
-            const windGust = getWindGust(data);
-            const windDirection = getWindDirection(data);
-            const solar = getSolar(data);
-            const uv = getUv(data);
-            const rainRate = getRainRate(data);
+            const snapshot = {
+                temp: getTemperature(data),
+                feelsLike: getFeelsLike(data),
+                humidity: getHumidity(data),
+                windSpeed: getWindSpeed(data),
+                windGust: getWindGust(data),
+                windDirection: getWindDirection(data),
+                solar: getSolar(data),
+                uv: getUv(data),
+                rainRate: getRainRate(data)
+            };
+
+            console.log("PARSED LIVE WEATHER:", snapshot);
+
+            if (!hasUsableLiveData(snapshot)) {
+                throw new Error("Live response loaded, but expected weather fields were not found");
+            }
 
             const icon = document.querySelector(".weather-icon");
             const temperatureNode = document.querySelector(".temperature");
@@ -622,50 +710,49 @@ function updateCurrentWeather() {
             }
 
             if (temperatureNode) {
-                temperatureNode.innerHTML = `${formatNumber(temp, 1)}<span>°C</span>`;
+                temperatureNode.innerHTML = `${formatNumber(snapshot.temp, 1)}<span>°C</span>`;
             }
 
             if (descriptionNode) {
-                descriptionNode.textContent = `${units.feelsLike}${formatNumber(feelsLike, 1)}°C`;
+                descriptionNode.textContent = `${units.feelsLike}${formatNumber(snapshot.feelsLike, 1)}°C`;
             }
 
-            updateText("humidityValue", `${formatNumber(humidity, 0)}%`);
-            updateText("windSpeedValue", `${formatNumber(windSpeed * 3.6)} km/h`);
-            updateText("windGustValue", `${formatNumber(windGust * 3.6)} km/h`);
-            updateText("solarValue", `${formatNumber(solar, 0)} W/m²`);
-            updateText("uvValue", formatNumber(uv, 1));
-            updateText("windDirectionValue", degreesToCompass(windDirection));
-            updateText("rainRateValue", `${formatNumber(rainRate)} mm/h`);
-            updateText("feelsLikeValue", `${formatNumber(feelsLike)}°C`);
-            updateText("weatherStatus", computeStatus(rainRate, uv, temp));
+            updateText("humidityValue", `${formatNumber(snapshot.humidity, 0)}%`);
+            updateText("windSpeedValue", `${formatNumber(snapshot.windSpeed * 3.6)} km/h`);
+            updateText("windGustValue", `${formatNumber(snapshot.windGust * 3.6)} km/h`);
+            updateText("solarValue", `${formatNumber(snapshot.solar, 0)} W/m²`);
+            updateText("uvValue", formatNumber(snapshot.uv, 1));
+            updateText("windDirectionValue", degreesToCompass(snapshot.windDirection));
+            updateText("rainRateValue", `${formatNumber(snapshot.rainRate)} mm/h`);
+            updateText("feelsLikeValue", `${formatNumber(snapshot.feelsLike)}°C`);
+            updateText("weatherStatus", computeStatus(snapshot.rainRate, snapshot.uv, snapshot.temp));
             updateText("lastUpdated", `${units.updated}${new Date().toLocaleTimeString(isChinese ? "zh-CN" : "en-US")}`);
 
             if (!latestCurrentSnapshot) {
                 latestCurrentSnapshot = {};
             }
 
-            latestCurrentSnapshot.temp = temp;
-            latestCurrentSnapshot.uv = uv;
-            latestCurrentSnapshot.rainRate = rainRate;
+            latestCurrentSnapshot.temp = snapshot.temp;
+            latestCurrentSnapshot.uv = snapshot.uv;
+            latestCurrentSnapshot.rainRate = snapshot.rainRate;
 
             applyAtmosphereTheme({
-                rainRate,
-                solar,
-                temp
+                rainRate: snapshot.rainRate,
+                solar: snapshot.solar,
+                temp: snapshot.temp
             });
 
-            toggleMetricAlert("uvValue", uv >= 7);
-            toggleMetricAlert("windSpeedValue", windSpeed * 3.6 >= 25);
-            toggleMetricAlert("windGustValue", windGust * 3.6 >= 35);
-            toggleMetricAlert("rainRateValue", rainRate >= 8);
+            toggleMetricAlert("uvValue", snapshot.uv >= 7);
+            toggleMetricAlert("windSpeedValue", snapshot.windSpeed * 3.6 >= 25);
+            toggleMetricAlert("windGustValue", snapshot.windGust * 3.6 >= 35);
+            toggleMetricAlert("rainRateValue", snapshot.rainRate >= 8);
 
             maybeGenerateAiAdvice();
             revealDashboardOnce();
         })
         .catch((err) => {
             console.error("Current weather request failed:", err);
-            updateText("weatherStatus", isChinese ? "实时数据加载失败" : "Could not load live data");
-            document.body.dataset.weather = "cloudy";
+            showLiveUnavailable();
             revealDashboardOnce();
         });
 }
