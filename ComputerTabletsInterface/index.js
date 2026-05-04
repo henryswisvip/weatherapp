@@ -9,18 +9,7 @@ const API_URL = `${ECOWITT_REALTIME_BASE_URL}?${new URLSearchParams({
     application_key: ECOWITT_APPLICATION_KEY,
     api_key: ECOWITT_API_KEY,
     mac: ECOWITT_MAC,
-    call_back: [
-        "outdoor.temperature",
-        "outdoor.feels_like",
-        "outdoor.humidity",
-        "wind.wind_speed",
-        "wind.wind_gust",
-        "wind.wind_direction",
-        "solar_and_uvi.solar",
-        "solar_and_uvi.uvi",
-        "rain.rainrate",
-        "rainfall.rain_rate"
-    ].join(","),
+    call_back: "all",
     temp_unitid: "1",
     pressure_unitid: "3",
     wind_speed_unitid: "6",
@@ -137,11 +126,11 @@ function normalizeCurrentData(json) {
         throw new Error(json?.msg || "Live weather API failed");
     }
 
-    if (json?.data && typeof json.data === "object") {
+    if (json?.data && typeof json.data === "object" && !Array.isArray(json.data)) {
         return json.data;
     }
 
-    if (json && typeof json === "object") {
+    if (json && typeof json === "object" && !Array.isArray(json)) {
         return json;
     }
 
@@ -150,12 +139,12 @@ function normalizeCurrentData(json) {
 
 function getRainRate(data) {
     return getNumber(data, [
-        "rain.rainrate",
-        "rain.rain_rate",
-        "rain.rate",
         "rainfall.rain_rate",
         "rainfall.rainrate",
-        "rainfall.rate"
+        "rainfall.rate",
+        "rain.rainrate",
+        "rain.rain_rate",
+        "rain.rate"
     ], 0);
 }
 
