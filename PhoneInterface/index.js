@@ -1,4 +1,5 @@
 const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
+const API_INFO_URL = API_URL.replace("/real_time?", "/info?");
 
 const isChinese = window.location.pathname.includes("index_cn");
 const text = {
@@ -13,7 +14,84 @@ const text = {
 let hasLoadedOnce = false;
 
 function getValue(node, fallback = "--") {
-    return typeof node?.value !== "undefined" ? node.value : fallback;
+    if (node === null || typeof node === "undefined") {
+        return fallback;
+    }
+    if (typeof node === "object") {
+        if (typeof node.value !== "undefined") return node.value;
+        if (typeof node.val !== "undefined") return node.val;
+    }
+    return node;
+}
+
+function getPathValue(source, path) {
+    return path.split(".").reduce((acc, key) => acc?.[key], source);
+}
+
+function readByAliases(source, aliases, fallback = "--") {
+    for (const alias of aliases) {
+        const candidate = getValue(getPathValue(source, alias), undefined);
+        if (candidate !== undefined && candidate !== null && candidate !== "") {
+            return candidate;
+        }
+    }
+    return fallback;
+}
+
+function normalizeWeatherShape(rawData = {}) {
+    return {
+        outdoor: {
+            temperature: readByAliases(rawData, ["outdoor.temperature", "outdoor.temp", "metric.temp"]),
+            feels_like: readByAliases(rawData, ["outdoor.feels_like", "outdoor.feelsLike", "metric.heatIndex", "metric.windChill"]),
+            humidity: readByAliases(rawData, ["outdoor.humidity", "humidity", "metric.humidity"])
+        },
+        wind: {
+            wind_speed: readByAliases(rawData, ["wind.wind_speed", "wind.windSpeed", "metric.windSpeed"]),
+            wind_gust: readByAliases(rawData, ["wind.wind_gust", "wind.windGust", "metric.windGust"]),
+            wind_direction: readByAliases(rawData, ["wind.wind_direction", "wind.windDirection", "winddir", "windDir"])
+        },
+        solar_and_uvi: {
+            solar: readByAliases(rawData, ["solar_and_uvi.solar", "solarAndUvi.solar", "solarRadiation"]),
+            uvi: readByAliases(rawData, ["solar_and_uvi.uvi", "solarAndUvi.uvi", "solar_and_uvi.uv", "uv"])
+        },
+        rainfall: {
+            rain_rate: readByAliases(rawData, ["rainfall.rain_rate", "rainfall.rainRate", "metric.precipRate", "rainRate"])
+        }
+    };
+}
+
+function extractWeatherData(json) {
+    const payload = json?.data;
+    if (payload && typeof payload === "object" && !Array.isArray(payload) && payload.last_update) {
+        return normalizeWeatherShape(payload.last_update);
+    }
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+        return normalizeWeatherShape(payload);
+    }
+    if (Array.isArray(payload) && payload.length > 0) {
+        const first = payload[0];
+        return normalizeWeatherShape(first?.last_update || first);
+    }
+    if (json?.observations?.[0]) {
+        return normalizeWeatherShape(json.observations[0]);
+    }
+    return null;
+}
+
+function fetchCurrentWeatherData() {
+    return fetch(API_URL)
+        .then((response) => response.json())
+        .then((json) => extractWeatherData(json))
+        .then((data) => {
+            if (data) return data;
+            return fetch(API_INFO_URL)
+                .then((response) => response.json())
+                .then((json) => {
+                    const fallbackData = extractWeatherData(json);
+                    if (fallbackData) return fallbackData;
+                    throw new Error("No weather data available");
+                });
+        });
 }
 
 function formatNumber(value, digits = 1) {
@@ -89,10 +167,8 @@ function applyAtmosphereTheme({ rainRate, solar, temp }) {
 }
 
 function updateCurrentWeather() {
-    fetch(API_URL)
-        .then((response) => response.json())
-        .then((json) => {
-            const data = json?.data || {};
+    fetchCurrentWeatherData()
+        .then((data) => {
             const temp = Number(getValue(data.outdoor?.temperature));
             const feelsLike = Number(getValue(data.outdoor?.feels_like));
             const humidity = Number(getValue(data.outdoor?.humidity));
