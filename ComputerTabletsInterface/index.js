@@ -1,4 +1,4 @@
-const API_URL = https://api.weather.com/v2/pws/dailysummary/7day?stationId=ISHENZ65&format=json&units=m&apiKey=2fc44795e5144333844795e514d3338f;
+const API_URL = "https://api.ecowitt.net/api/v3/device/real_time?application_key=38E4E6CBDE53C4D5AB510E4AD693A522&api_key=547d3f02-e7c4-46d1-bef9-072d402873d8&mac=60:01:94:23:9D:CB&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=6&rainfall_unitid=12";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.50&longitude=113.93&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7";
 const ECOWITT_HISTORY_BASE_URL = "https://api.ecowitt.net/api/v3/device/history";
 const HF_ADVICE_PROXY_URL = "/api/hf-advice";
@@ -75,8 +75,8 @@ function getValue(node, fallback = "--") {
     return fallback;
 }
 
-function getFirstValue(nodes, fallback = "--") {
-    for (const node of nodes) {
+function getFirstValue(possibleNodes, fallback = "--") {
+    for (const node of possibleNodes) {
         const value = getValue(node, undefined);
 
         if (typeof value !== "undefined" && value !== null && value !== "--") {
@@ -91,9 +91,9 @@ function getRainRate(data) {
     return Number(getFirstValue([
         data.rain?.rainrate,
         data.rain?.rain_rate,
+        data.rain?.rate,
         data.rainfall?.rain_rate,
         data.rainfall?.rainrate,
-        data.rain?.rate,
         data.rainfall?.rate
     ], 0));
 }
@@ -480,7 +480,10 @@ function addDaysToIso(isoDate, dayOffset) {
 
 function getEcowittHistoryUrl(startDate, endDate) {
     const params = new URLSearchParams({
-        call_back: "outdoor.temperature,rainfall.daily,rain.rainrate",
+        application_key: "38E4E6CBDE53C4D5AB510E4AD693A522",
+        api_key: "547d3f02-e7c4-46d1-bef9-072d402873d8",
+        mac: "60:01:94:23:9D:CB",
+        call_back: "outdoor.temperature,rainfall.daily",
         cycle_type: "5min",
         start_date: `${startDate} 00:00:00`,
         end_date: `${endDate} 23:59:59`,
@@ -512,80 +515,6 @@ function buildLastSevenDatesEndingToday() {
     return Array.from({ length: 7 }, (_, index) => addDaysToIso(today, index - 6));
 }
 
-function parseSummaryHistory(json) {
-    const summaries = Array.isArray(json?.summaries) ? json.summaries : [];
-
-    const cleaned = summaries
-        .filter((item) => item?.obsTimeLocal && item?.metric)
-        .slice(-7);
-
-    const dates = cleaned.map((item) => item.obsTimeLocal.slice(0, 10));
-
-    return {
-        dates,
-        labels: buildHistoryLabels(dates),
-        highs: cleaned.map((item) => Number(item.metric?.tempHigh)),
-        lows: cleaned.map((item) => Number(item.metric?.tempLow)),
-        precipTotals: cleaned.map((item) => Number(item.metric?.precipTotal ?? 0))
-    };
-}
-
-function parseEcowittListHistory(json, dates) {
-    const tempList = json?.data?.outdoor?.temperature?.list || {};
-    const rainDailyList = json?.data?.rainfall?.daily?.list || {};
-    const rainRateList = json?.data?.rain?.rainrate?.list || json?.data?.rainfall?.rain_rate?.list || {};
-
-    const byDate = new Map(dates.map((date) => [
-        date,
-        {
-            high: null,
-            low: null,
-            rain: 0
-        }
-    ]));
-
-    Object.entries(tempList).forEach(([ts, value]) => {
-        const date = toShanghaiIsoDateFromTimestamp(ts);
-        const day = byDate.get(date);
-        const numeric = Number(value);
-
-        if (!day || !Number.isFinite(numeric)) return;
-
-        day.high = day.high === null ? numeric : Math.max(day.high, numeric);
-        day.low = day.low === null ? numeric : Math.min(day.low, numeric);
-    });
-
-    Object.entries(rainDailyList).forEach(([ts, value]) => {
-        const date = toShanghaiIsoDateFromTimestamp(ts);
-        const day = byDate.get(date);
-        const numeric = Number(value);
-
-        if (!day || !Number.isFinite(numeric)) return;
-
-        day.rain = Math.max(day.rain, numeric);
-    });
-
-    if (Object.keys(rainDailyList).length === 0) {
-        Object.entries(rainRateList).forEach(([ts, value]) => {
-            const date = toShanghaiIsoDateFromTimestamp(ts);
-            const day = byDate.get(date);
-            const numeric = Number(value);
-
-            if (!day || !Number.isFinite(numeric)) return;
-
-            day.rain += numeric;
-        });
-    }
-
-    return {
-        dates,
-        labels: buildHistoryLabels(dates),
-        highs: dates.map((date) => byDate.get(date)?.high),
-        lows: dates.map((date) => byDate.get(date)?.low),
-        precipTotals: dates.map((date) => byDate.get(date)?.rain ?? 0)
-    };
-}
-
 function fetchEcowittHistorySeries() {
     const dates = buildLastSevenDatesEndingToday();
     const startDate = dates[0];
@@ -595,15 +524,49 @@ function fetchEcowittHistorySeries() {
     return fetch(url)
         .then((response) => response.json())
         .then((json) => {
-            if (Array.isArray(json?.summaries)) {
-                return parseSummaryHistory(json);
-            }
-
             if (json?.code !== 0) {
                 throw new Error(json?.msg || "history_failed");
             }
 
-            return parseEcowittListHistory(json, dates);
+            const tempList = json?.data?.outdoor?.temperature?.list || {};
+            const rainList = json?.data?.rainfall?.daily?.list || {};
+            const byDate = new Map(dates.map((date) => [
+                date,
+                {
+                    high: null,
+                    low: null,
+                    rain: 0
+                }
+            ]));
+
+            Object.entries(tempList).forEach(([ts, value]) => {
+                const date = toShanghaiIsoDateFromTimestamp(ts);
+                const day = byDate.get(date);
+                const numeric = Number(value);
+
+                if (!day || !Number.isFinite(numeric)) return;
+
+                day.high = day.high === null ? numeric : Math.max(day.high, numeric);
+                day.low = day.low === null ? numeric : Math.min(day.low, numeric);
+            });
+
+            Object.entries(rainList).forEach(([ts, value]) => {
+                const date = toShanghaiIsoDateFromTimestamp(ts);
+                const day = byDate.get(date);
+                const numeric = Number(value);
+
+                if (!day || !Number.isFinite(numeric)) return;
+
+                day.rain = Math.max(day.rain, numeric);
+            });
+
+            return {
+                dates,
+                labels: buildHistoryLabels(dates),
+                highs: dates.map((date) => byDate.get(date)?.high),
+                lows: dates.map((date) => byDate.get(date)?.low),
+                precipTotals: dates.map((date) => byDate.get(date)?.rain ?? 0)
+            };
         });
 }
 
@@ -638,7 +601,7 @@ function updateCurrentWeather() {
     fetch(API_URL)
         .then((response) => response.json())
         .then((json) => {
-            const data = json?.data || json || {};
+            const data = json?.data || {};
 
             const temp = getTemperature(data);
             const feelsLike = getFeelsLike(data);
@@ -875,8 +838,11 @@ function buildForecastLabels(dates) {
             return isChinese ? "明天" : "Tomorrow";
         }
 
-        return new Date(dateStr).toLocaleDateString(isChinese ? "zh-CN" : "en-US", {
-            weekday: "short"
+        const dateObj = new Date(`${dateStr}T00:00:00+08:00`);
+
+        return dateObj.toLocaleDateString(isChinese ? "zh-CN" : "en-US", {
+            weekday: "short",
+            timeZone: "Asia/Shanghai"
         });
     });
 }
